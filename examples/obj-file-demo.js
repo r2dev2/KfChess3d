@@ -113,14 +113,14 @@ export class Obj_File_Demo extends Scene {                           // **Obj_Fi
     constructor() {
         super();
         // Load the model file:
-        this.shapes = {"teapot": new Shape_From_File("assets/teapot.obj")};
+        this.shapes = {"teapot": new Shape_From_File("assets/chess/White_Knight.obj")};
 
         // Don't create any DOM elements to control this scene:
         this.widget_options = {make_controls: false};
         // Non bump mapped:
         this.stars = new Material(new defs.Textured_Phong(1), {
             color: color(.5, .5, .5, 1),
-            ambient: .3, diffusivity: .5, specularity: .5, texture: new Texture("assets/stars.png")
+            ambient: 1, diffusivity: .5, specularity: .5, texture: new Texture("assets/stars.png")
         });
         // Bump mapped:
         this.bumps = new Material(new defs.Fake_Bump_Map(1), {
@@ -139,7 +139,7 @@ export class Obj_File_Demo extends Scene {                           // **Obj_Fi
             Mat4.rotation(t / 300, 1, 0, 0).times(vec4(3, 2, 10, 1)),
             color(1, .7, .7, 1), 100000)];
 
-        for (let i of [-1, 1]) {                                       // Spin the 3D model shapes as well.
+        for (let i of [1]) {                                       // Spin the 3D model shapes as well.
             const model_transform = Mat4.rotation(t / 2000, 0, 2, 1)
                 .times(Mat4.translation(2 * i, 0, 0))
                 .times(Mat4.rotation(t / 1500, -1, 2, 0))
