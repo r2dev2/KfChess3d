@@ -6,11 +6,31 @@ const {
 } = tiny;
 
 class Piece {
-    constructor(shape, translation = 0, scale = 1) {
+    constructor(shape, file, rank, piece_color, translation = 0, scale = 1) {
         this.shape = shape;
         this.translation = translation;
         this.scale = scale;
+
+        this.rank = rank - 1;
+        this.file = file.charCodeAt(0) - 'a'.charCodeAt(0);
+        this.flip = 1;
+        if (piece_color === "black")
+            this.flip = -1;
+        this.model_transform = Mat4.identity();
+        this.model_transform = this.model_transform.times(Mat4.translation(-this.file * 2.4, this.translation, this.rank * 2.4).times(Mat4.scale(this.scale, this.scale, this.scale * this.flip)));
+        console.log(this.rank);
+        console.log(this.file);
+        console.log(Mat4.translation(-this.file * 2.4, this.translation, this.rank * 2.4).times(Mat4.scale(this.scale, this.scale, this.scale * this.flip)));
     }
+
+    move_to(file, rank) {
+        this.file = file.charCodeAt(0) - 'a'.charCodeAt(0);
+        this.rank = rank - 1;
+
+        this.model_transform = Mat4.identity();
+        this.model_transform = this.model_transform.times(Mat4.translation(-this.file * 2.4, this.translation, this.rank * 2.4).times(Mat4.scale(this.scale, this.scale, this.scale * this.flip)));
+    }
+
 }
 
 export class Chess extends Scene {
@@ -25,21 +45,47 @@ export class Chess extends Scene {
             white_knight: new Shape_From_File('assets/chess/White_Knight.obj'),
             white_bishop: new Shape_From_File('assets/chess/White_Bishop.obj'),
             white_rook: new Shape_From_File('assets/chess/White_Rook.obj'),
+            white_pawn: new Shape_From_File('assets/chess/White_Pawn.obj'),
             grid: new defs.Cube()
         };
 
         this.white_pieces = [
-            new Piece(this.shapes.white_rook, -0.3),
-            new Piece(this.shapes.white_knight, -0.8, 0.5),
-            new Piece(this.shapes.white_bishop),
-            new Piece(this.shapes.white_queen),
-            new Piece(this.shapes.white_king, -0.3),
-            new Piece(this.shapes.white_bishop),
-            new Piece(this.shapes.white_knight, -0.8, 0.5),
-            new Piece(this.shapes.white_rook, -0.3)
+            new Piece(this.shapes.white_rook, 'a', 1, "white", -0.3),
+            new Piece(this.shapes.white_knight, 'b', 1, "white", -0.8, 0.5),
+            new Piece(this.shapes.white_bishop, 'c', 1, "white"),
+            new Piece(this.shapes.white_queen, 'd', 1, "white"),
+            new Piece(this.shapes.white_king, 'e', 1, "white", -0.3),
+            new Piece(this.shapes.white_bishop, 'f', 1, "white"),
+            new Piece(this.shapes.white_knight, 'g', 1, "white", -0.8, 0.6),
+            new Piece(this.shapes.white_rook, 'h', 1, "white", -0.3),
+            new Piece(this.shapes.white_pawn, 'a', 2, "white", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'b', 2, "white", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'c', 2, "white", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'd', 2, "white", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'e', 2, "white", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'f', 2, "white", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'g', 2, "white", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'h', 2, "white", -0.6, 0.6),
         ];
 
-        this.black_pieces = this.white_pieces;
+        this.black_pieces = [
+            new Piece(this.shapes.white_rook, 'a', 8, "black", -0.3),
+            new Piece(this.shapes.white_knight, 'b', 8, "black", -0.8, 0.5),
+            new Piece(this.shapes.white_bishop, 'c', 8, "black"),
+            new Piece(this.shapes.white_queen, 'd', 8, "black"),
+            new Piece(this.shapes.white_king, 'e', 8, "black", -0.3),
+            new Piece(this.shapes.white_bishop, 'f', 8, "black"),
+            new Piece(this.shapes.white_knight, 'g', 8, "black", -0.8, 0.5),
+            new Piece(this.shapes.white_rook, 'h', 8, "black", -0.3),
+            new Piece(this.shapes.white_pawn, 'a', 7, "black", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'b', 7, "black", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'c', 7, "black", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'd', 7, "black", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'e', 7, "black", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'f', 7, "black", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'g', 7, "black", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'h', 7, "black", -0.6, 0.6),
+        ];
 
         // *** Materials
         this.materials = {
@@ -89,17 +135,17 @@ export class Chess extends Scene {
         ];
 
         let model_transform = Mat4.identity();
-        model_transform = model_transform.times(Mat4.translation(9.6, 0, 0));
-
+        this.white_pieces[12].move_to('e', 4);
+        this.black_pieces[12].move_to('e', 5);
         this.white_pieces.forEach((piece, i) => {
-            piece.shape.draw(context, program_state, model_transform.times(
-                Mat4.translation(-2.4 * i, piece.translation, 0)).times(Mat4.scale(piece.scale, piece.scale, piece.scale)),
+            // console.log(piece.model_transform);
+            piece.shape.draw(context, program_state, piece.model_transform,
                 this.materials.piece);
         });
 
         this.black_pieces.forEach((piece, i) => {
-            piece.shape.draw(context, program_state, model_transform.times(
-                    Mat4.translation(-2.4 * i, piece.translation, 16.8)).times(Mat4.scale(piece.scale, piece.scale, -1 * piece.scale)),
+            piece.shape.draw(context, program_state,
+                    piece.model_transform,
                 this.materials.piece.override({ color: hex_color("#000000") }));
         });
 
