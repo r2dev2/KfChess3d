@@ -44,7 +44,7 @@ export class Chess extends Scene {
         // *** Materials
         this.materials = {
             piece: new Material(new defs.Textured_Phong(),
-                { ambient: .4, diffusivity: .6, color: hex_color("#ffffff"), texture: new Texture("assets/stars.png") }),
+                { ambient: .4, diffusivity: .6, color: hex_color("#ffffff"), texture: new Texture("assets/lee.jpg") }),
             grid: new Material(new defs.Phong_Shader(),
                 { ambient: .4, diffusivity: .6, color: hex_color("#000000") }),
         }
