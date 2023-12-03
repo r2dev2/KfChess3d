@@ -41,7 +41,9 @@ window.network = new Network('owouwu');
 window.kfaudio = new Audio('./assets/kfchess.mp3');
 kfaudio.loop = true;
 const kfstart = () => {
-    kfaudio.play();
+    if (!localStorage.getItem('disable')) {
+        kfaudio.play();
+    }
     window.removeEventListener('click', kfstart);
 }
 window.addEventListener('click', kfstart);
