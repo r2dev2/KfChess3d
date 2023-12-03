@@ -53,7 +53,7 @@ class GridSquare {
         this.#rank = rank;
         this.#shape = new defs.Cube();
         this.#material = new Material(new defs.Phong_Shader(),
-                { ambient: .4, diffusivity: .6, color: hex_color('#000000') });
+            { ambient: 1, diffusivity: 0, specularity: 0, color: hex_color('#000000') });
         this.id = objId++;
     }
 
@@ -182,6 +182,8 @@ export class Chess extends Scene {
             new Light(vec4(0, 20, 0, 1), color(1, 1, 1, 1), 10000)
         ];
 
+        this.picker.update(context, program_state);
+
         let model_transform = Mat4.identity();
         this.white_pieces[12].move_to('e', 4);
         this.black_pieces[12].move_to('e', 5);
@@ -204,8 +206,6 @@ export class Chess extends Scene {
                     this.materials.grid.override({ color: (i + j) % 2 == 0 ? hex_color("#000000") : hex_color("#ffffff") }));
             }
         }
-
-        this.picker.update(context, program_state);
     }
 }
 

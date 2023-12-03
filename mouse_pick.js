@@ -39,8 +39,9 @@ export class MousePicker {
     update(context, program_state) {
         // draw each tracked object with red of the object id
         const gl = context.context;
+
         for (const object of this.#scene.tracked) {
-            object.drawOverride(context, program_state, { color: color(object.id / 255.0, 0., 0., 0.) });
+            object.drawOverride(context, program_state, { color: color(object.id / 255.0, 0., 0., 1.) });
         };
 
         // read the pixel value at the position of mouse, id will be red component of rgba
@@ -50,5 +51,6 @@ export class MousePicker {
         gl.readPixels(pixelX, pixelY, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, data);
 
         this.#object = data[0] == 0 ? null : data[0];
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     }
 }
