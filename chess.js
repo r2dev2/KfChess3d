@@ -7,6 +7,10 @@ const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene, Texture
 } = tiny;
 
+const PIECE_VELOCITY = 10;
+const PIECE_HEIGHT = 2;
+const IDLE = 0, MOVING = 1, EATEN = 2;
+
 class Piece {
     constructor(shape, file, rank, piece_color, translation = 0, scale = 1, is_king = false) {
         this.shape = shape;
@@ -18,6 +22,18 @@ class Piece {
         this.flip = 1;
         if (piece_color === "black")
             this.flip = -1;
+
+        // chess piece state variable
+        this.state = {
+            mode: IDLE,
+            old_p: [-this.file * 2.4, this.translation, this.rank * 2.4],
+            curr_p: [-this.file * 2.4, this.translation, this.rank * 2.4],
+            dest_p: [0, this.translation, 0],
+            v: [0, 0, 0],
+            a: 0,
+            start_t: 0,
+        }
+
         this.model_transform = Mat4.identity();
         this.model_transform = this.model_transform.times(Mat4.translation(-this.file * 2.4, this.translation, this.rank * 2.4).times(Mat4.scale(this.scale, this.scale, this.scale * this.flip)));
         this.alive = 1;
@@ -26,12 +42,67 @@ class Piece {
 
     }
 
-    move_to(file, rank) {
-        this.file = file.charCodeAt(0) - 'a'.charCodeAt(0);
-        this.rank = rank - 1;
+    move_to(file, rank, t) {
+        // computes and sets relevant variables for piece movement
+        // uses constant PIECE_VELOCITY and PIECE_HEIGHT to determine velocity in x, y, z and acceleration in y
 
-        this.model_transform = Mat4.identity();
-        this.model_transform = this.model_transform.times(Mat4.translation(-this.file * 2.4, this.translation, this.rank * 2.4).times(Mat4.scale(this.scale, this.scale, this.scale * this.flip)));
+        // convert file and rank to x, z coordinates
+        console.log(file, rank, this.file, this.rank)
+        let [src_x, src_z] = this.to_coords(this.file, this.rank);
+        let [tgt_x, tgt_z] = this.to_coords(file, rank);
+
+        // update piece file and rank to destination (TODO fix if need different behavior)
+        this.file = file;
+        this.rank = rank;
+
+        this.state.dest_p[0] = tgt_x;
+        this.state.dest_p[2] = tgt_z;
+
+        let d_x = (tgt_x - src_x);
+        let d_z = (tgt_z - src_z);
+        let v_x = PIECE_VELOCITY * (d_x / Math.sqrt(d_x ** 2 + d_z ** 2));
+        let v_z = PIECE_VELOCITY * (d_z / Math.sqrt(d_x ** 2 + d_z ** 2));
+
+        let animation_time = Math.sqrt(d_x ** 2 + d_z ** 2) / PIECE_VELOCITY;
+
+        this.state.a = 8 * PIECE_HEIGHT / (animation_time ** 2);
+
+        this.state.v = [v_x, this.state.a * animation_time / 2, v_z];
+        this.state.start_t = t;
+        this.state.mode = MOVING;
+    }
+
+    to_coords(file, rank) { return [-file * 2.4, rank * 2.4]; } // converts file and rank to x, z coordinates
+
+    compute_transform(t) {
+        // if piece is moving, computes the translation matrix at time t, otherwise return model_transform
+
+        if (this.state.mode !== MOVING) return this.model_transform;
+
+        // dt = time since piece started moving
+        let dt = t - this.state.start_t;
+
+        // stop piece movement once ∆y < 0
+        if ((this.state.v[1] - this.state.a * dt / 2) * dt < 0) {
+            this.state.mode = IDLE;
+            // set model_transform to destination position
+            this.model_transform = Mat4.translation(this.state.dest_p[0] - this.state.old_p[0], 0, this.state.dest_p[2] - this.state.old_p[2]).times(this.model_transform);
+            // update old and current position to destination position
+            this.state.old_p = [...this.state.dest_p];
+            this.state.curr_p = [...this.state.dest_p];
+            // reset velocity and acceleration
+            this.state.v = [0, 0, 0];
+            this.state.a = 0;
+            return this.model_transform;
+        }
+
+        // update current position based on old position, velocity, and acceleration
+        this.state.curr_p[0] = this.state.old_p[0] + this.state.v[0] * dt;
+        this.state.curr_p[1] = this.state.old_p[1] + (this.state.v[1] - this.state.a * dt / 2) * dt;
+        this.state.curr_p[2] = this.state.old_p[2] + this.state.v[2] * dt;
+
+        // return translation matrix
+        return Mat4.translation(this.state.v[0] * dt, (this.state.v[1] - this.state.a * dt / 2) * dt, this.state.v[2] * dt).times(this.model_transform);
     }
 
     kill() {
@@ -101,6 +172,9 @@ class GridSquare {
         return `Grid(${files[this.#file]}${this.#rank + 1})`;
     }
 
+    getFile() { return this.#file }
+
+    getRank() { return this.#rank }
 }
 
 export class Chess extends Scene {
@@ -188,6 +262,7 @@ export class Chess extends Scene {
 
         // ex. "Grid(c5)"
         this.selected_square = "";
+        this.destination_square = "";
 
         this.picker = new MousePicker(this);
         this.picker.onClicked((obj) => {
@@ -206,18 +281,19 @@ export class Chess extends Scene {
                     console.log("Move: ", this.selected_square, str);
                     console.log(this.board);
 
-                    let start_file = this.selected_square.substring(5, 6);
-                    let start_rank = this.selected_square.charCodeAt(6) - '0'.charCodeAt(0);
-                    let end_file = str.substring(5, 6);
-                    let end_rank = str.charCodeAt(6) - '0'.charCodeAt(0);
-                    if (this.move(start_file, start_rank, end_file, end_rank)) {
-                        console.log("Move successful!");
-                    }
-                    else {
-                        console.log("Move unsuccessful");
-                    }
+                    // let start_file = this.selected_square.substring(5, 6);
+                    // let start_rank = this.selected_square.charCodeAt(6) - '0'.charCodeAt(0);
+                    // let end_file = str.substring(5, 6);
+                    // let end_rank = str.charCodeAt(6) - '0'.charCodeAt(0);
+                    this.destination_square = str;
+                    // if (this.move(start_file, start_rank, end_file, end_rank)) {
+                    //     console.log("Move successful!");
+                    // }
+                    // else {
+                    //     console.log("Move unsuccessful");
+                    // }
 
-                    this.selected_square = "";
+                    // this.selected_square = "";
                 }
             }
         });
@@ -242,13 +318,13 @@ export class Chess extends Scene {
         });
 
         // initial position to test code
-        this.move('e', 2, 'e', 4);
-        console.log(this.board);
-        this.move('d', 7, 'd', 5);
+        // this.move('e', 2, 'e', 4);
+        // console.log(this.board);
+        // this.move('d', 7, 'd', 5);
+        // // this.move('e', 4, 'd', 5);
         // this.move('e', 4, 'd', 5);
-        this.move('e', 4, 'd', 5);
-        this.move('d', 8, 'd', 5);
-        this.move('d', 1, 'c', 2);
+        // this.move('d', 8, 'd', 5);
+        // this.move('d', 1, 'c', 2);
         // console.log(this.can_move_knight(this.white_pieces[6], 'f', 5));
     }
 
@@ -325,12 +401,14 @@ export class Chess extends Scene {
 
     }
 
+    // uses numbers
     is_valid_square(file, rank) {
         return !(file < 0 || file > 7 || rank < 0 || rank > 7);
     }
 
     // checks if there's a non-moving piece at the given square
     // returns false if the square is not valid
+    // uses numbers
     piece_at(file, rank) {
         if (file < 0 || file > 7 || rank < 0 || rank > 7) {
             return 0;
@@ -338,6 +416,7 @@ export class Chess extends Scene {
         return this.board[file][rank];
     }
 
+    // all the can move functions use letter and number like can_move_pawn(pawn, "e", 4)
     // requirement: passes in a pawn
     can_move_pawn(piece, end_file, end_rank) {
 
@@ -578,6 +657,7 @@ export class Chess extends Scene {
 
     // return piece at board square
     // assumes the piece location is valid
+    // uses numbers
     get_piece(file, rank) {
         let p = this.piece_at(file, rank);
         if (p > 0) {
@@ -588,7 +668,8 @@ export class Chess extends Scene {
         }
     }
 
-    move(start_file, start_rank, end_file, end_rank) {
+    // uses letters and nubmers like move("e", 4, "e", 5)
+    move(start_file, start_rank, end_file, end_rank, t) {
         let [file, rank] = [start_file.charCodeAt(0) - 'a'.charCodeAt(0), start_rank - 1];
         let [file2, rank2] = [end_file.charCodeAt(0) - 'a'.charCodeAt(0), end_rank - 1];
 
@@ -647,7 +728,7 @@ export class Chess extends Scene {
                 this.reset_board();
             }
         }
-        p.move_to(end_file, end_rank);
+        p.move_to(file2, rank2, t);
         this.board[file2][rank2] = this.board[file][rank];
         this.board[file][rank] = 0;
 
@@ -658,6 +739,26 @@ export class Chess extends Scene {
     display(context, program_state) {
         // display():  Called once per frame of animation.
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
+
+        if (this.selected_square !== "" && this.destination_square !== "") {
+            let start_file = this.selected_square.substring(5, 6);
+            let start_rank = this.selected_square.charCodeAt(6) - '0'.charCodeAt(0);
+            let end_file = this.destination_square.substring(5, 6);
+            let end_rank = this.destination_square.charCodeAt(6) - '0'.charCodeAt(0);
+            // this.destination_square_squre = str;
+            if (this.move(start_file, start_rank, end_file, end_rank, t)) {
+                console.log("Move successful!");
+            }
+            else {
+                console.log("Move unsuccessful");
+            }
+
+            this.selected_square = "";
+            this.destination_square = "";
+            // this.piece_select.move_to(this.grid_select.getFile(), this.grid_select.getRank(), t);
+            // this.piece_select = null;
+            // this.grid_select = null;
+        }
 
         // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
         if (!context.scratchpad.controls) {
@@ -694,11 +795,11 @@ export class Chess extends Scene {
             }
 
             if (selected_piece > 0 && selected_piece - 1 === i) {
-                piece.shape.draw(context, program_state, piece.model_transform.times(Mat4.rotation(t, 0, 1, 0)),
+                piece.shape.draw(context, program_state, piece.compute_transform(t).times(Mat4.rotation(t, 0, 1, 0)),
                     this.materials.piece);
             }
             else {
-                piece.shape.draw(context, program_state, piece.model_transform,
+                piece.shape.draw(context, program_state, piece.compute_transform(t),
                     this.materials.piece);
             }
         });
@@ -709,12 +810,11 @@ export class Chess extends Scene {
             }
 
             if (selected_piece < 0 && - selected_piece - 1 === i) {
-                piece.shape.draw(context, program_state, piece.model_transform.times(Mat4.rotation(t, 0, 1, 0)),
+                piece.shape.draw(context, program_state, piece.compute_transform(t).times(Mat4.rotation(t, 0, 1, 0)),
                     this.materials.piece.override({ color: hex_color("#000000") }));
             }
             else {
-                piece.shape.draw(context, program_state,
-                    piece.model_transform,
+                piece.shape.draw(context, program_state, piece.compute_transform(t),
                     this.materials.piece.override({ color: hex_color("#000000") }));
             }
         });
