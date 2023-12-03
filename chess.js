@@ -34,7 +34,17 @@ class Piece {
     }
 }
 
+// access network object with network
 window.network = new Network('owouwu');
+
+// kfchess theme music
+window.kfaudio = new Audio('./assets/kfchess.mp3');
+kfaudio.loop = true;
+const kfstart = () => {
+    kfaudio.play();
+    window.removeEventListener('click', kfstart);
+}
+window.addEventListener('click', kfstart);
 
 let objId = 1;
 const objMap = new Map();
