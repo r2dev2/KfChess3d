@@ -1,5 +1,6 @@
 import {defs, tiny} from './examples/common.js';
 import { Shape_From_File } from './examples/obj-file-demo.js';
+import { MousePicker } from './mouse_pick.js';
 
 const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene, Texture
@@ -30,7 +31,45 @@ class Piece {
         this.model_transform = Mat4.identity();
         this.model_transform = this.model_transform.times(Mat4.translation(-this.file * 2.4, this.translation, this.rank * 2.4).times(Mat4.scale(this.scale, this.scale, this.scale * this.flip)));
     }
+}
 
+let objId = 1;
+class GridSquare {
+    // file and rank are in [0, 7]
+    // file is like a-h
+    // rank is like 0-7
+    #file;
+    #rank;
+
+    // the shape and material of the cube
+    #shape;
+    #material;
+
+    // unique object id
+    id;
+
+    constructor(file, rank) {
+        this.#file = file;
+        this.#rank = rank;
+        this.#shape = new defs.Cube();
+        this.#material = new Material(new defs.Phong_Shader(),
+                { ambient: .4, diffusivity: .6, color: hex_color('#000000') });
+        this.id = objId++;
+    }
+
+    drawOverride(ctx, prog_state, override) {
+        const transform = Mat4.translation(
+                2.4 * (this.#rank + 1) - 19.2, -1.5, 2.4 * this.#file
+            )
+            .times(Mat4.scale(1.2, 0.1, 1.2));
+        const white = hex_color('#ffffff');
+        const black = hex_color('#000000');
+        const material = this.#material.override({
+            color: (this.#file + this.#rank) % 2 == 0 ? white : black,
+            ...override
+        });
+        this.#shape.draw(ctx, prog_state, transform, material);
+    }
 }
 
 export class Chess extends Scene {
@@ -95,6 +134,15 @@ export class Chess extends Scene {
                 { ambient: .4, diffusivity: .6, color: hex_color("#000000") }),
         }
 
+        this.tracked = []
+        for (let file = 0; file < 8; ++file) {
+            for (let rank = 0; rank < 8; ++rank) {
+                this.tracked.push(new GridSquare(file, rank));
+            };
+        };
+
+        this.picker = new MousePicker(this);
+
         this.initial_camera_location = Mat4.look_at(vec3(0, 10, 20), vec3(0, 0, 0), vec3(0, 1, 0));
     }
 
@@ -156,6 +204,8 @@ export class Chess extends Scene {
                     this.materials.grid.override({ color: (i + j) % 2 == 0 ? hex_color("#000000") : hex_color("#ffffff") }));
             }
         }
+
+        this.picker.update(context, program_state);
     }
 }
 
