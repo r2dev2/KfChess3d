@@ -1,6 +1,7 @@
 import {defs, tiny} from './examples/common.js';
 import { Shape_From_File } from './examples/obj-file-demo.js';
 import { MousePicker } from './mouse_pick.js';
+import { Network, MOVE } from './network.js';
 
 const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene, Texture
@@ -32,6 +33,8 @@ class Piece {
         this.model_transform = this.model_transform.times(Mat4.translation(-this.file * 2.4, this.translation, this.rank * 2.4).times(Mat4.scale(this.scale, this.scale, this.scale * this.flip)));
     }
 }
+
+window.network = new Network('owouwu');
 
 let objId = 1;
 const objMap = new Map();
