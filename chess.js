@@ -431,15 +431,17 @@ export class Chess extends Scene {
 
         let possible_moves = [];
         if (piece.flip === 1) {
-            // double if at initial position
-            if (rank === 1) {
-                if (!this.piece_at(file, rank + 2)) {
-                    possible_moves.push([file, rank + 2]);
-                }
-            }
+
+
 
             if (rank < 7 && !this.piece_at(file, rank + 1)) {
                 possible_moves.push([file, rank + 1]);
+
+                if (rank === 1) {
+                    if (!this.piece_at(file, rank + 2)) {
+                        possible_moves.push([file, rank + 2]);
+                    }
+                }
             }
 
             for (let i = file - 1; i <= file + 1; i+=2) {
@@ -525,36 +527,95 @@ export class Chess extends Scene {
 
 
         let possible_moves = [];
-        for (let d = -7; d <= 7; d++) {
+        for (let d = -1; d >= -7; d--) {
             if (!this.is_valid_square(file + d, rank + d)) {
-                continue;
+                break;
             }
+
+            let pos = false;
 
             if (piece.flip === 1 && this.piece_at(file + d, rank + d) <= 0) {
                 possible_moves.push([file + d, rank + d]);
+                pos = true;
             }
 
             if (piece.flip === -1 && this.piece_at(file + d, rank + d) >= 0) {
                 possible_moves.push([file + d, rank + d]);
+                pos = true;
             }
 
+            if (!pos) {
+                break;
+            }
         }
 
-        for (let d = -7; d <= 7; d++) {
-            if (!this.is_valid_square(file + d, rank - d)) {
-                continue;
+        for (let d = 1; d <= 7; d++) {
+            if (!this.is_valid_square(file + d, rank + d)) {
+                break;
             }
+
+            let pos = false;
+
+            if (piece.flip === 1 && this.piece_at(file + d, rank + d) <= 0) {
+                possible_moves.push([file + d, rank + d]);
+                pos = true;
+            }
+
+            if (piece.flip === -1 && this.piece_at(file + d, rank + d) >= 0) {
+                possible_moves.push([file + d, rank + d]);
+                pos = true;
+            }
+
+            if (!pos) {
+                break;
+            }
+        }
+
+        for (let d = -1; d >= -7; d--) {
+            if (!this.is_valid_square(file + d, rank - d)) {
+                break;
+            }
+
+            let pos = false;
 
             if (piece.flip === 1 && this.piece_at(file + d, rank - d) <= 0) {
                 possible_moves.push([file + d, rank - d]);
+                pos = true;
             }
 
             if (piece.flip === -1 && this.piece_at(file + d, rank - d) >= 0) {
                 possible_moves.push([file + d, rank - d]);
+                pos = true;
+            }
+
+            if (!pos) {
+                break;
             }
 
         }
 
+        for (let d = 1; d <= 7; d++) {
+            if (!this.is_valid_square(file + d, rank - d)) {
+                break;
+            }
+
+            let pos = false;
+
+            if (piece.flip === 1 && this.piece_at(file + d, rank - d) <= 0) {
+                possible_moves.push([file + d, rank - d]);
+                pos = true;
+            }
+
+            if (piece.flip === -1 && this.piece_at(file + d, rank - d) >= 0) {
+                possible_moves.push([file + d, rank - d]);
+                pos = true;
+            }
+
+            if (!pos) {
+                break;
+            }
+
+        }
 
         let possible = false;
         possible_moves.forEach((move) => {
@@ -576,32 +637,94 @@ export class Chess extends Scene {
 
 
         let possible_moves = [];
-        for (let d = -7; d <= 7; d++) {
+        for (let d = -1; d >= -7; d--) {
             if (!this.is_valid_square(file + d, rank)) {
-                continue;
+                break;
             }
+
+            let pos = false;
 
             if (piece.flip === 1 && this.piece_at(file + d, rank) <= 0) {
                 possible_moves.push([file + d, rank]);
+                pos = true;
             }
 
             if (piece.flip === -1 && this.piece_at(file + d, rank) >= 0) {
                 possible_moves.push([file + d, rank]);
+                pos = true;
+            }
+
+            if (!pos) {
+                break;
             }
         }
 
-        for (let d = -7; d <= 7; d++) {
-            if (!this.is_valid_square(file, rank + d)) {
-                continue;
+        for (let d = 1; d <= 7; d++) {
+            if (!this.is_valid_square(file + d, rank)) {
+                break;
             }
+
+            let pos = false;
+
+            if (piece.flip === 1 && this.piece_at(file + d, rank) <= 0) {
+                possible_moves.push([file + d, rank]);
+                pos = true;
+            }
+
+            if (piece.flip === -1 && this.piece_at(file + d, rank) >= 0) {
+                possible_moves.push([file + d, rank]);
+                pos = true;
+            }
+
+            if (!pos) {
+                break;
+            }
+        }
+
+        for (let d = -1; d >= -7; d--) {
+            if (!this.is_valid_square(file, rank + d)) {
+                break;
+            }
+
+            let pos = false;
 
             if (piece.flip === 1 && this.piece_at(file, rank + d) <= 0) {
                 possible_moves.push([file, rank + d]);
+                pos = true;
             }
 
             if (piece.flip === -1 && this.piece_at(file, rank + d) >= 0) {
                 possible_moves.push([file, rank + d]);
+                pos = true;
             }
+
+            if (!pos) {
+                break;
+            }
+
+        }
+
+        for (let d = 1; d <= 7; d++) {
+            if (!this.is_valid_square(file, rank + d)) {
+                break;
+            }
+
+            let pos = false;
+
+            if (piece.flip === 1 && this.piece_at(file, rank + d) <= 0) {
+                possible_moves.push([file, rank + d]);
+                pos = true;
+            }
+
+            if (piece.flip === -1 && this.piece_at(file, rank + d) >= 0) {
+                possible_moves.push([file, rank + d]);
+                pos = true;
+            }
+
+            if (!pos) {
+                break;
+            }
+
         }
 
 
