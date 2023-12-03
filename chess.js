@@ -34,6 +34,7 @@ class Piece {
 }
 
 let objId = 1;
+const objMap = new Map();
 class GridSquare {
     // file and rank are in [0, 7]
     // file is like a-h
@@ -55,11 +56,14 @@ class GridSquare {
         this.#material = new Material(new defs.Phong_Shader(),
             { ambient: 1, diffusivity: 0, specularity: 0, color: hex_color('#000000') });
         this.id = objId++;
+
+        // register this object with the global object map
+        objMap.set(this.id, this);
     }
 
     drawOverride(ctx, prog_state, override) {
         const transform = Mat4.translation(
-                2.4 * (this.#rank + 1) - 19.2, -1.5, 2.4 * this.#file
+                2.4 * ((7 - this.#file) + 1) - 19.2, -1.5, 2.4 * this.#rank
             )
             .times(Mat4.scale(1.2, 0.1, 1.2));
         const white = hex_color('#ffffff');
@@ -69,6 +73,11 @@ class GridSquare {
             ...override
         });
         this.#shape.draw(ctx, prog_state, transform, material);
+    }
+
+    toString() {
+        const files = 'abcdefgh';
+        return `Grid(${files[this.#file]}${this.#rank + 1})`;
     }
 }
 
@@ -143,7 +152,7 @@ export class Chess extends Scene {
 
         this.picker = new MousePicker(this);
         this.picker.onClicked((obj) => {
-            console.log(obj, 'clicked');
+            console.log(obj, objMap.get(obj).toString(), 'clicked');
         });
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 10, 20), vec3(0, 0, 0), vec3(0, 1, 0));
