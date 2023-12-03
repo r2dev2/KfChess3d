@@ -3,6 +3,12 @@ import {defs, tiny} from './examples/common.js';
 const { color } = tiny;
 
 export class MousePicker {
+    // find out which object is clicked
+    // usage:
+    // >>> const picker = new MousePicker(scene);
+    // >>> picker.onClicked(object => console.log('object id', object, 'clicked'));
+    // >>> picker.update(context, program_state); // call in beginning of display()
+
     // scene is the Scene object (like Chess)
     // for MousePicker support, we require a .tracked attribute
     // which is an array of shapes which have .drawOverride() which draws with
@@ -20,11 +26,15 @@ export class MousePicker {
     // and number id if there is an object
     #object;
 
+    // people listening for mouse clicks
+    #listeners;
+
     constructor(scene) {
         this.#scene = scene;
         this.#cssX = -1;
         this.#cssY = -1;
         this.#object = null;
+        this.#listeners = [];
 
         setTimeout(() => {
             this.#canvas = document.querySelector('canvas');
@@ -33,7 +43,18 @@ export class MousePicker {
                 this.#cssX = e.clientX - rect.left;
                 this.#cssY = e.clientY - rect.top;
             });
+
+            this.#canvas.addEventListener('click', e => {
+                // use a .forEach in case the listener throws exception
+                this.#listeners.forEach(listener => {
+                    listener(this.#object);
+                });
+            })
         }, 100);
+    }
+
+    onClicked(cb) {
+        this.#listeners.push(cb);
     }
 
     update(context, program_state) {
