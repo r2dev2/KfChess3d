@@ -94,7 +94,8 @@ export class Chess extends Scene {
             white_bishop: new Shape_From_File('assets/chess/White_Bishop.obj'),
             white_rook: new Shape_From_File('assets/chess/White_Rook.obj'),
             white_pawn: new Shape_From_File('assets/chess/White_Pawn.obj'),
-            grid: new defs.Cube()
+            grid: new defs.Cube(),
+            walls: new defs.Cube()
         };
 
         this.white_pieces = [
@@ -141,6 +142,19 @@ export class Chess extends Scene {
                 { ambient: .4, diffusivity: .6, color: hex_color("#ffffff"), texture: new Texture("assets/lee.jpg") }),
             grid: new Material(new defs.Phong_Shader(),
                 { ambient: .4, diffusivity: .6, color: hex_color("#000000") }),
+            top: new Material(new defs.Textured_Phong(),
+            { ambient: 0.4, diffusivity: 1, color: hex_color("#ffffff"), texture: new Texture("assets/background/top.png") }),
+            right: new Material(new defs.Textured_Phong(),
+            { ambient: 0.4, diffusivity: 1, color: hex_color("#ffffff"), texture: new Texture("assets/background/right.png") }),
+            left: new Material(new defs.Textured_Phong(),
+            { ambient: 0.4, diffusivity: 1, color: hex_color("#ffffff"), texture: new Texture("assets/background/left.png") }),
+            bottom: new Material(new defs.Textured_Phong(),
+            { ambient: 0.4, diffusivity: 1, color: hex_color("#ffffff"), texture: new Texture("assets/background/bottom.png") }),
+            front: new Material(new defs.Textured_Phong(),
+            { ambient: 0.4, diffusivity: 1, color: hex_color("#ffffff"), texture: new Texture("assets/background/front.png") }),
+            back: new Material(new defs.Textured_Phong(),
+            { ambient: 0.4, diffusivity: 1, color: hex_color("#ffffff"), texture: new Texture("assets/background/back.png") }),
+
         }
 
         this.tracked = []
@@ -220,6 +234,13 @@ export class Chess extends Scene {
                     this.materials.grid.override({ color: (i + j) % 2 == 0 ? hex_color("#000000") : hex_color("#ffffff") }));
             }
         }
+        this.shapes.walls.draw(context, program_state, model_transform.times(Mat4.translation(1, 500, 1)).times(Mat4.scale(500, 1, 500)), this.materials.top);
+        this.shapes.walls.draw(context, program_state, model_transform.times(Mat4.translation(1, -500, 1)).times(Mat4.scale(500, 1, 500)), this.materials.bottom);
+        this.shapes.walls.draw(context, program_state, model_transform.times(Mat4.translation(-500, 1, 1)).times(Mat4.scale(1, 500, 500)), this.materials.left);
+        this.shapes.walls.draw(context, program_state, model_transform.times(Mat4.translation(500, 1, 1)).times(Mat4.scale(1, 500, 500)), this.materials.right);
+        this.shapes.walls.draw(context, program_state, model_transform.times(Mat4.translation(1, 1, 500)).times(Mat4.scale(500, 500, 1)), this.materials.front);
+        this.shapes.walls.draw(context, program_state, model_transform.times(Mat4.translation(1, 1, -500)).times(Mat4.scale(500, 500, 1)), this.materials.back);
+        
     }
 }
 
