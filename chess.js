@@ -152,7 +152,9 @@ export class Chess extends Scene {
 
         this.picker = new MousePicker(this);
         this.picker.onClicked((obj) => {
-            console.log(obj, objMap.get(obj).toString(), 'clicked');
+            if (obj !== null) {
+                console.log(obj, objMap.get(obj).toString(), 'clicked');
+            }
         });
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 10, 20), vec3(0, 0, 0), vec3(0, 1, 0));
