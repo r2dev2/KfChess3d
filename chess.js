@@ -8,7 +8,7 @@ const {
 } = tiny;
 
 class Piece {
-    constructor(shape, file, rank, piece_color, translation = 0, scale = 1) {
+    constructor(shape, file, rank, piece_color, translation = 0, scale = 1, is_king = false) {
         this.shape = shape;
         this.translation = translation;
         this.scale = scale;
@@ -20,9 +20,10 @@ class Piece {
             this.flip = -1;
         this.model_transform = Mat4.identity();
         this.model_transform = this.model_transform.times(Mat4.translation(-this.file * 2.4, this.translation, this.rank * 2.4).times(Mat4.scale(this.scale, this.scale, this.scale * this.flip)));
-        console.log(this.rank);
-        console.log(this.file);
-        console.log(Mat4.translation(-this.file * 2.4, this.translation, this.rank * 2.4).times(Mat4.scale(this.scale, this.scale, this.scale * this.flip)));
+        this.alive = 1;
+
+        this.is_king = is_king;
+
     }
 
     move_to(file, rank) {
@@ -32,7 +33,12 @@ class Piece {
         this.model_transform = Mat4.identity();
         this.model_transform = this.model_transform.times(Mat4.translation(-this.file * 2.4, this.translation, this.rank * 2.4).times(Mat4.scale(this.scale, this.scale, this.scale * this.flip)));
     }
+
+    kill() {
+        this.alive = 0;
+    }
 }
+
 
 // access network object with network
 window.network = new Network('owouwu');
@@ -94,6 +100,7 @@ class GridSquare {
         const files = 'abcdefgh';
         return `Grid(${files[this.#file]}${this.#rank + 1})`;
     }
+
 }
 
 export class Chess extends Scene {
@@ -118,9 +125,9 @@ export class Chess extends Scene {
             new Piece(this.shapes.white_knight, 'b', 1, "white", -0.8, 0.5),
             new Piece(this.shapes.white_bishop, 'c', 1, "white"),
             new Piece(this.shapes.white_queen, 'd', 1, "white"),
-            new Piece(this.shapes.white_king, 'e', 1, "white", -0.3),
+            new Piece(this.shapes.white_king, 'e', 1, "white", -0.3, 1, true),
             new Piece(this.shapes.white_bishop, 'f', 1, "white"),
-            new Piece(this.shapes.white_knight, 'g', 1, "white", -0.8, 0.6),
+            new Piece(this.shapes.white_knight, 'g', 1, "white", -0.8, 0.5),
             new Piece(this.shapes.white_rook, 'h', 1, "white", -0.3),
             new Piece(this.shapes.white_pawn, 'a', 2, "white", -0.6, 0.6),
             new Piece(this.shapes.white_pawn, 'b', 2, "white", -0.6, 0.6),
@@ -137,7 +144,7 @@ export class Chess extends Scene {
             new Piece(this.shapes.white_knight, 'b', 8, "black", -0.8, 0.5),
             new Piece(this.shapes.white_bishop, 'c', 8, "black"),
             new Piece(this.shapes.white_queen, 'd', 8, "black"),
-            new Piece(this.shapes.white_king, 'e', 8, "black", -0.3),
+            new Piece(this.shapes.white_king, 'e', 8, "black", -0.3, 1, true),
             new Piece(this.shapes.white_bishop, 'f', 8, "black"),
             new Piece(this.shapes.white_knight, 'g', 8, "black", -0.8, 0.5),
             new Piece(this.shapes.white_rook, 'h', 8, "black", -0.3),
@@ -179,19 +186,134 @@ export class Chess extends Scene {
             };
         };
 
+        // ex. "Grid(c5)"
+        this.selected_square = "";
+
         this.picker = new MousePicker(this);
         this.picker.onClicked((obj) => {
             if (obj !== null) {
                 console.log(obj, objMap.get(obj).toString(), 'clicked');
+                let str = objMap.get(obj).toString();
+                if (this.selected_square === "") {
+                    if (this.piece_at(str.charCodeAt(5) - 'a'.charCodeAt(0), (str.charCodeAt(6) - '0'.charCodeAt(0)) - 1) !== 0) {
+                        this.selected_square = str;
+                    }
+                }
+                else if (this.selected_square === str) {
+                    this.selected_square = "";
+                }
+                else {
+                    console.log("Move: ", this.selected_square, str);
+                    console.log(this.board);
+
+                    let start_file = this.selected_square.substring(5, 6);
+                    let start_rank = this.selected_square.charCodeAt(6) - '0'.charCodeAt(0);
+                    let end_file = str.substring(5, 6);
+                    let end_rank = str.charCodeAt(6) - '0'.charCodeAt(0);
+                    if (this.move(start_file, start_rank, end_file, end_rank)) {
+                        console.log("Move successful!");
+                    }
+                    else {
+                        console.log("Move unsuccessful");
+                    }
+
+                    this.selected_square = "";
+                }
             }
         });
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 10, 20), vec3(0, 0, 0), vec3(0, 1, 0));
+
+        this.board = [[0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0]];
+
+        this.white_pieces.forEach((p, i) => {
+            this.board[p.file][p.rank] = i + 1;
+        });
+
+        this.black_pieces.forEach((p, i) => {
+            this.board[p.file][p.rank] =  -(i + 1);
+        });
+
+        // initial position to test code
+        this.move('e', 2, 'e', 4);
+        console.log(this.board);
+        this.move('d', 7, 'd', 5);
+        // this.move('e', 4, 'd', 5);
+        this.move('e', 4, 'd', 5);
+        this.move('d', 8, 'd', 5);
+        this.move('d', 1, 'c', 2);
+        // console.log(this.can_move_knight(this.white_pieces[6], 'f', 5));
+    }
+
+    reset_board() {
+        this.white_pieces = [
+            new Piece(this.shapes.white_rook, 'a', 1, "white", -0.3),
+            new Piece(this.shapes.white_knight, 'b', 1, "white", -0.8, 0.5),
+            new Piece(this.shapes.white_bishop, 'c', 1, "white"),
+            new Piece(this.shapes.white_queen, 'd', 1, "white"),
+            new Piece(this.shapes.white_king, 'e', 1, "white", -0.3, 1, true),
+            new Piece(this.shapes.white_bishop, 'f', 1, "white"),
+            new Piece(this.shapes.white_knight, 'g', 1, "white", -0.8, 0.6),
+            new Piece(this.shapes.white_rook, 'h', 1, "white", -0.3),
+            new Piece(this.shapes.white_pawn, 'a', 2, "white", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'b', 2, "white", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'c', 2, "white", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'd', 2, "white", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'e', 2, "white", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'f', 2, "white", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'g', 2, "white", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'h', 2, "white", -0.6, 0.6),
+        ];
+
+        this.black_pieces = [
+            new Piece(this.shapes.white_rook, 'a', 8, "black", -0.3),
+            new Piece(this.shapes.white_knight, 'b', 8, "black", -0.8, 0.5),
+            new Piece(this.shapes.white_bishop, 'c', 8, "black"),
+            new Piece(this.shapes.white_queen, 'd', 8, "black"),
+            new Piece(this.shapes.white_king, 'e', 8, "black", -0.3, 1, true),
+            new Piece(this.shapes.white_bishop, 'f', 8, "black"),
+            new Piece(this.shapes.white_knight, 'g', 8, "black", -0.8, 0.5),
+            new Piece(this.shapes.white_rook, 'h', 8, "black", -0.3),
+            new Piece(this.shapes.white_pawn, 'a', 7, "black", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'b', 7, "black", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'c', 7, "black", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'd', 7, "black", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'e', 7, "black", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'f', 7, "black", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'g', 7, "black", -0.6, 0.6),
+            new Piece(this.shapes.white_pawn, 'h', 7, "black", -0.6, 0.6),
+        ];
+
+        this.board = [[0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0]];
+
+        this.white_pieces.forEach((p, i) => {
+            this.board[p.file][p.rank] = i + 1;
+        });
+
+        this.black_pieces.forEach((p, i) => {
+            this.board[p.file][p.rank] =  -(i + 1);
+        });
+
+
     }
 
     make_control_panel() {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-        this.key_triggered_button("View solar system", ["Control", "0"], () => this.attached = () => null);
+        this.key_triggered_button("Reset Game", ["Control", "0"], () => this.reset_board());
         this.new_line();
         this.key_triggered_button("Attach to planet 1", ["Control", "1"], () => this.attached = () => this.planet_1);
         this.key_triggered_button("Attach to planet 2", ["Control", "2"], () => this.attached = () => this.planet_2);
@@ -200,7 +322,338 @@ export class Chess extends Scene {
         this.key_triggered_button("Attach to planet 4", ["Control", "4"], () => this.attached = () => this.planet_4);
         this.new_line();
         this.key_triggered_button("Attach to moon", ["Control", "m"], () => this.attached = () => this.moon);
+
     }
+
+    is_valid_square(file, rank) {
+        return !(file < 0 || file > 7 || rank < 0 || rank > 7);
+    }
+
+    // checks if there's a non-moving piece at the given square
+    // returns false if the square is not valid
+    piece_at(file, rank) {
+        if (file < 0 || file > 7 || rank < 0 || rank > 7) {
+            return 0;
+        }
+        return this.board[file][rank];
+    }
+
+    // requirement: passes in a pawn
+    can_move_pawn(piece, end_file, end_rank) {
+
+        // convert to correct integer indices
+        end_file = end_file.charCodeAt(0) - 'a'.charCodeAt(0);
+        end_rank--;
+
+        let [file, rank] = [piece.file, piece.rank];
+
+        console.log(file, rank);
+        console.log(end_file, end_rank);
+
+        let possible_moves = [];
+        if (piece.flip === 1) {
+            // double if at initial position
+            if (rank === 1) {
+                if (!this.piece_at(file, rank + 2)) {
+                    possible_moves.push([file, rank + 2]);
+                }
+            }
+
+            if (rank < 7 && !this.piece_at(file, rank + 1)) {
+                possible_moves.push([file, rank + 1]);
+            }
+
+            for (let i = file - 1; i <= file + 1; i+=2) {
+                if (this.piece_at(i, rank + 1)) {
+                    possible_moves.push([i, rank + 1]);
+                }
+            }
+        }
+        else {
+            // double if at initial position
+            if (rank === 6) {
+                if (!this.piece_at(file, rank - 2)) {
+                    possible_moves.push([file, rank - 2]);
+                }
+            }
+
+
+            if (rank > 0 && !this.piece_at(file, rank - 1)) {
+                possible_moves.push([file, rank - 1]);
+            }
+
+            for (let i = file - 1; i <= file + 1; i+=2) {
+                if (this.piece_at(i, rank - 1)) {
+                    possible_moves.push([i, rank - 1]);
+                }
+            }
+        }
+
+        console.log(possible_moves);
+        let possible = false;
+        possible_moves.forEach((move) => {
+            if (move[0] === end_file && move[1] === end_rank) {
+                possible = true;
+            }
+        });
+
+
+        return possible;
+    }
+
+    can_move_knight(piece, end_file, end_rank) {
+
+        // convert to correct integer indices
+        end_file = end_file.charCodeAt(0) - 'a'.charCodeAt(0);
+        end_rank--;
+
+        let [file, rank] = [piece.file, piece.rank];
+
+
+        let possible_moves = [];
+        let d = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+
+        // double if at initial position
+        d.forEach((square) => {
+            if (!this.is_valid_square(file + square[0], rank + square[1])) {
+                return;
+            }
+            if (piece.flip === 1 && this.piece_at(file + square[0], rank + square[1]) <= 0) {
+                possible_moves.push([file + square[0], rank + square[1]]);
+            }
+            else if (piece.flip === -1 && this.piece_at(file + square[0], rank + square[1]) >= 0) {
+                possible_moves.push([file + square[0], rank + square[1]]);
+            }
+        })
+
+        let possible = false;
+        possible_moves.forEach((move) => {
+            if (move[0] === end_file && move[1] === end_rank) {
+                possible = true;
+            }
+        });
+
+        return possible;
+    }
+
+    can_move_bishop(piece, end_file, end_rank) {
+
+        // convert to correct integer indices
+        end_file = end_file.charCodeAt(0) - 'a'.charCodeAt(0);
+        end_rank--;
+
+        let [file, rank] = [piece.file, piece.rank];
+
+
+        let possible_moves = [];
+        for (let d = -7; d <= 7; d++) {
+            if (!this.is_valid_square(file + d, rank + d)) {
+                continue;
+            }
+
+            if (piece.flip === 1 && this.piece_at(file + d, rank + d) <= 0) {
+                possible_moves.push([file + d, rank + d]);
+            }
+
+            if (piece.flip === -1 && this.piece_at(file + d, rank + d) >= 0) {
+                possible_moves.push([file + d, rank + d]);
+            }
+
+        }
+
+        for (let d = -7; d <= 7; d++) {
+            if (!this.is_valid_square(file + d, rank - d)) {
+                continue;
+            }
+
+            if (piece.flip === 1 && this.piece_at(file + d, rank - d) <= 0) {
+                possible_moves.push([file + d, rank - d]);
+            }
+
+            if (piece.flip === -1 && this.piece_at(file + d, rank - d) >= 0) {
+                possible_moves.push([file + d, rank - d]);
+            }
+
+        }
+
+
+        let possible = false;
+        possible_moves.forEach((move) => {
+            if (move[0] === end_file && move[1] === end_rank) {
+                possible = true;
+            }
+        });
+
+        return possible;
+    }
+
+    can_move_rook(piece, end_file, end_rank) {
+
+        // convert to correct integer indices
+        end_file = end_file.charCodeAt(0) - 'a'.charCodeAt(0);
+        end_rank--;
+
+        let [file, rank] = [piece.file, piece.rank];
+
+
+        let possible_moves = [];
+        for (let d = -7; d <= 7; d++) {
+            if (!this.is_valid_square(file + d, rank)) {
+                continue;
+            }
+
+            if (piece.flip === 1 && this.piece_at(file + d, rank) <= 0) {
+                possible_moves.push([file + d, rank]);
+            }
+
+            if (piece.flip === -1 && this.piece_at(file + d, rank) >= 0) {
+                possible_moves.push([file + d, rank]);
+            }
+        }
+
+        for (let d = -7; d <= 7; d++) {
+            if (!this.is_valid_square(file, rank + d)) {
+                continue;
+            }
+
+            if (piece.flip === 1 && this.piece_at(file, rank + d) <= 0) {
+                possible_moves.push([file, rank + d]);
+            }
+
+            if (piece.flip === -1 && this.piece_at(file, rank + d) >= 0) {
+                possible_moves.push([file, rank + d]);
+            }
+        }
+
+
+        let possible = false;
+        possible_moves.forEach((move) => {
+            if (move[0] === end_file && move[1] === end_rank) {
+                possible = true;
+            }
+        });
+
+        return possible;
+    }
+
+    can_move_queen(piece, end_file, end_rank) {
+        console.log(piece);
+        return this.can_move_rook(piece, end_file, end_rank) || this.can_move_bishop(piece, end_file, end_rank);
+    }
+
+    can_move_king(piece, end_file, end_rank) {
+
+        // convert to correct integer indices
+        end_file = end_file.charCodeAt(0) - 'a'.charCodeAt(0);
+        end_rank--;
+
+        let [file, rank] = [piece.file, piece.rank];
+
+
+        let possible_moves = [];
+        let d = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
+
+        // double if at initial position
+        d.forEach((square) => {
+            if (!this.is_valid_square(file + square[0], rank + square[1])) {
+                return;
+            }
+            if (piece.flip === 1 && this.piece_at(file + square[0], rank + square[1]) <= 0) {
+                possible_moves.push([file + square[0], rank + square[1]]);
+            }
+            else if (piece.flip === -1 && this.piece_at(file + square[0], rank + square[1]) >= 0) {
+                possible_moves.push([file + square[0], rank + square[1]]);
+            }
+        })
+
+        let possible = false;
+        possible_moves.forEach((move) => {
+            if (move[0] === end_file && move[1] === end_rank) {
+                possible = true;
+            }
+        });
+
+        return possible;
+    }
+
+    // return piece at board square
+    // assumes the piece location is valid
+    get_piece(file, rank) {
+        let p = this.piece_at(file, rank);
+        if (p > 0) {
+            return this.white_pieces[p - 1];
+        }
+        else {
+            return this.black_pieces[-p - 1];
+        }
+    }
+
+    move(start_file, start_rank, end_file, end_rank) {
+        let [file, rank] = [start_file.charCodeAt(0) - 'a'.charCodeAt(0), start_rank - 1];
+        let [file2, rank2] = [end_file.charCodeAt(0) - 'a'.charCodeAt(0), end_rank - 1];
+
+        if (!this.piece_at(file, rank)) {
+            return false;
+        }
+
+        let possible = false;
+
+        switch (Math.abs(this.piece_at(file, rank))) {
+            case 1:
+            case 8:
+                possible = this.can_move_rook(this.get_piece(file, rank), end_file, end_rank);
+                break;
+            case 2:
+            case 7:
+                possible = this.can_move_knight(this.get_piece(file, rank), end_file, end_rank);
+                break;
+            case 3:
+            case 6:
+                possible = this.can_move_bishop(this.get_piece(file, rank), end_file, end_rank);
+                break;
+            case 4:
+                possible = this.can_move_queen(this.get_piece(file, rank), end_file, end_rank);
+                break;
+            case 5:
+                possible = this.can_move_king(this.get_piece(file, rank), end_file, end_rank);
+                break;
+            case 9:
+            case 10:
+            case 11:
+            case 12:
+            case 13:
+            case 14:
+            case 15:
+            case 16:
+                console.log("fjslkfjslf");
+                possible = this.can_move_pawn(this.get_piece(file, rank), end_file, end_rank);
+                break;
+        }
+
+
+        if (!possible) {
+            return false;
+        }
+
+        let p = this.get_piece(file, rank);
+
+        // tell piece to start moving
+
+        let p2 = this.get_piece(file2, rank2);
+        if (p2) {
+            p2.kill();
+            if (p2.is_king) {
+                // can add win animation function here
+                this.reset_board();
+            }
+        }
+        p.move_to(end_file, end_rank);
+        this.board[file2][rank2] = this.board[file][rank];
+        this.board[file][rank] = 0;
+
+        return true;
+    }
+
 
     display(context, program_state) {
         // display():  Called once per frame of animation.
@@ -228,22 +681,48 @@ export class Chess extends Scene {
         this.picker.update(context, program_state);
 
         let model_transform = Mat4.identity();
-        this.white_pieces[12].move_to('e', 4);
-        this.black_pieces[12].move_to('e', 5);
+
+
+        let selected_piece = 0;
+        if (this.selected_square !== "") {
+            selected_piece = this.piece_at(this.selected_square.charCodeAt(5) - 'a'.charCodeAt(0), (this.selected_square.charCodeAt(6) - '0'.charCodeAt(0)) - 1);
+        }
         this.white_pieces.forEach((piece, i) => {
             // console.log(piece.model_transform);
-            piece.shape.draw(context, program_state, piece.model_transform,
-                this.materials.piece);
+            if (!piece.alive) {
+                return;
+            }
+
+            if (selected_piece > 0 && selected_piece - 1 === i) {
+                piece.shape.draw(context, program_state, piece.model_transform.times(Mat4.rotation(t, 0, 1, 0)),
+                    this.materials.piece);
+            }
+            else {
+                piece.shape.draw(context, program_state, piece.model_transform,
+                    this.materials.piece);
+            }
         });
 
         this.black_pieces.forEach((piece, i) => {
-            piece.shape.draw(context, program_state,
+            if (!piece.alive) {
+                return;
+            }
+
+            if (selected_piece < 0 && - selected_piece - 1 === i) {
+                piece.shape.draw(context, program_state, piece.model_transform.times(Mat4.rotation(t, 0, 1, 0)),
+                    this.materials.piece.override({ color: hex_color("#000000") }));
+            }
+            else {
+                piece.shape.draw(context, program_state,
                     piece.model_transform,
-                this.materials.piece.override({ color: hex_color("#000000") }));
+                    this.materials.piece.override({ color: hex_color("#000000") }));
+            }
         });
 
+        // draw the chess board
         for (let i = 0; i < 8; i++) {
             for (let j = 1; j < 9; j++) {
+
                 // model_transform = model_transform.times(Mat4.translation(5, 0, 0));
                 this.shapes.grid.draw(context, program_state, model_transform.times(Mat4.translation(2.4 * j - 19.2, -1.5, 2.4 * i)).times(Mat4.scale(1.2, 0.1, 1.2)),
                     this.materials.grid.override({ color: (i + j) % 2 == 0 ? hex_color("#000000") : hex_color("#ffffff") }));
@@ -368,7 +847,7 @@ class Gouraud_Shader extends Shader {
             }, vec4(0, 0, 0, 0)).to3();
         gl.uniform3fv(gpu.squared_scale, squared_scale);
         // Send the current matrices to the shader.  Go ahead and pre-compute
-        // the products we'll need of the of the three special matrices and just
+        // the products we'll need of the three special matrices and just
         // cache and send those.  They will be the same throughout this draw
         // call, and thus across each instance of the vertex shader.
         // Transpose them since the GPU expects matrices as column-major arrays.
