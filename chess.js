@@ -883,12 +883,12 @@ export class Chess extends Scene {
             program_state.set_camera(this.initial_camera_location);
         }
         if(this.player === 0){
-            let desired = Mat4.inverse(Mat4.identity().times(Mat4.rotation(0.4,1,0,0)).times(Mat4.rotation(Math.PI,0,1,0)).times(Mat4.translation(9,4.5,16.5)));
+            let desired = Mat4.inverse(Mat4.identity().times(Mat4.rotation(0.6,1,0,0)).times(Mat4.rotation(Math.PI,0,1,0)).times(Mat4.translation(9,5.22,18)));
             program_state.set_camera(desired);
             this.player=2; 
         }
         else if(this.player === 1){
-            let desired = Mat4.inverse(Mat4.identity().times(Mat4.rotation(-0.4,1,0,0)).times(Mat4.translation(-8,-2,32)));
+            let desired = Mat4.inverse(Mat4.identity().times(Mat4.rotation(-0.6,1,0,0)).times(Mat4.translation(-8,-4.2,32)));
             program_state.set_camera(desired);
             this.player=2; 
         }
