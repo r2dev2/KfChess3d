@@ -1,16 +1,7 @@
 import { defs, tiny } from './examples/common.js';
 
+// accepts cooldown between 0. and 1.
 export class Cooldown_Shader extends defs.Textured_Phong {
-    constructor() {
-        super();
-        this.cooldown_level = 0.;
-    }
-
-    // accepts between 0. and 1.
-    set_cooldown(cooldown) {
-        this.cooldown_level = cooldown;
-    }
-
     fragment_glsl_code() {
       // ********* FRAGMENT SHADER *********
       // A fragment is a pixel that's overlapped by the current triangle.
@@ -40,7 +31,7 @@ export class Cooldown_Shader extends defs.Textured_Phong {
         // scale [0, 1] to [-1.4, 2.]
         const min = -1.4;
         const max = 2.;
-        const level = this.cooldown_level * (max - min) + min;
+        const level = material.cooldown * (max - min) + min;
         context.uniform1f(gpu_addresses.cooldown_level, level);
     }
 };
