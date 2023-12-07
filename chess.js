@@ -111,8 +111,16 @@ class Piece {
 }
 
 
+const rng = () => Math.random().toString(16).slice(2);
+const rngid = rng() + rng();
+
+// white sends out the link and will therefore not have id param set
+const params = new URLSearchParams(location.search);
+const id = params.get('id') ?? rngid;
+const isWhite = !params.get('id');
+
 // access network object with network
-window.network = new Network('owouwu');
+window.network = new Network(`kfchess-${id}`);
 
 // kfchess theme music
 window.kfaudio = new Audio('./assets/kfchess.mp3');
@@ -388,15 +396,15 @@ export class Chess extends Scene {
 
     make_control_panel() {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-        this.key_triggered_button("Reset Game", ["Control", "0"], () => this.reset_board());
-        this.new_line();
-        this.key_triggered_button("Attach to planet 1", ["Control", "1"], () => this.attached = () => this.planet_1);
-        this.key_triggered_button("Attach to planet 2", ["Control", "2"], () => this.attached = () => this.planet_2);
-        this.new_line();
-        this.key_triggered_button("Attach to planet 3", ["Control", "3"], () => this.attached = () => this.planet_3);
-        this.key_triggered_button("Attach to planet 4", ["Control", "4"], () => this.attached = () => this.planet_4);
-        this.new_line();
-        this.key_triggered_button("Attach to moon", ["Control", "m"], () => this.attached = () => this.moon);
+        if (isWhite) {
+            this.key_triggered_button('Copy Join Link', ['Control', 'j'], () => {
+                const join = new URL(location);
+                join.searchParams.set('id', id);
+                navigator.clipboard.writeText(join.toString());
+            });
+            this.new_line();
+        }
+        this.key_triggered_button('Reset Game', ['Control', '0'], () => this.reset_board());
 
     }
 
