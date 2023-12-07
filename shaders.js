@@ -3,9 +3,10 @@ import { defs, tiny } from './examples/common.js';
 export class Cooldown_Shader extends defs.Textured_Phong {
     constructor() {
         super();
-        this.cooldown_level = 1.;
+        this.cooldown_level = 0.;
     }
 
+    // accepts between 0. and 1.
     set_cooldown(cooldown) {
         this.cooldown_level = cooldown;
     }
@@ -41,10 +42,5 @@ export class Cooldown_Shader extends defs.Textured_Phong {
         const max = 2.;
         const level = this.cooldown_level * (max - min) + min;
         context.uniform1f(gpu_addresses.cooldown_level, level);
-
-        this.cooldown_level -= 0.00001;
-        if (this.cooldown_level < 0) {
-            this.cooldown_level = 1;
-        }
     }
 };
