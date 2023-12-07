@@ -287,7 +287,8 @@ export class Chess extends Scene {
                 console.log(obj, objMap.get(obj).toString(), 'clicked');
                 let str = objMap.get(obj).toString();
                 if (this.selected_square === "") {
-                    if (this.piece_at(str.charCodeAt(5) - 'a'.charCodeAt(0), (str.charCodeAt(6) - '0'.charCodeAt(0)) - 1) !== 0) {
+                    const piece = this.piece_at(str.charCodeAt(5) - 'a'.charCodeAt(0), (str.charCodeAt(6) - '0'.charCodeAt(0)) - 1);
+                    if (isWhite && piece > 0 || !isWhite && piece < 0) {
                         this.selected_square = str;
                     }
                 }
@@ -420,6 +421,10 @@ export class Chess extends Scene {
     // checks if there's a non-moving piece at the given square
     // returns false if the square is not valid
     // uses numbers
+    //
+    // piece_at(...) > 0  => white
+    // piece_at(...) < 0  => black
+    // piece_at(...) == 0 => no piece
     piece_at(file, rank) {
         if (file < 0 || file > 7 || rank < 0 || rank > 7) {
             return 0;
