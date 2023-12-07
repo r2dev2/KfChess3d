@@ -190,7 +190,7 @@ export class Chess extends Scene {
         // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
         super();
 
-        this.player = 0;
+        this.player = isWhite ? 0 : 1;
 
         // At the beginning of our program, load one of each of these shape definitions onto the GPU.
         this.shapes = {
