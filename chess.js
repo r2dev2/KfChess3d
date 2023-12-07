@@ -1,6 +1,7 @@
-import {defs, tiny} from './examples/common.js';
+import { defs, tiny } from './examples/common.js';
 import { Shape_From_File } from './examples/obj-file-demo.js';
 import { MousePicker } from './mouse_pick.js';
+import { Cooldown_Shader } from './shaders.js';
 import { Network, MOVE } from './network.js';
 
 const {
@@ -245,7 +246,7 @@ export class Chess extends Scene {
 
         // *** Materials
         this.materials = {
-            piece: new Material(new defs.Textured_Phong(),
+            piece: new Material(new Cooldown_Shader(),
                 { ambient: .4, diffusivity: .6, color: hex_color("#ffffff"), texture: new Texture("assets/lee.jpg") }),
             grid: new Material(new defs.Phong_Shader(),
                 { ambient: .4, diffusivity: .6, color: hex_color("#000000") }),
