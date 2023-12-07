@@ -172,9 +172,9 @@ class GridSquare {
         return `Grid(${files[this.#file]}${this.#rank + 1})`;
     }
 
-    getFile() { return this.#file }
+    getFile() { return this.#file; }
 
-    getRank() { return this.#rank }
+    getRank() { return this.#rank; }
 }
 
 export class Chess extends Scene {
@@ -266,6 +266,13 @@ export class Chess extends Scene {
         this.selected_square = "";
         this.destination_square = "";
 
+        // push -> this.moveQueue.push()
+        // pop -> this.moveQueue.shift(1)
+        // ex. [{ from_: 'e2', to: 'e4' }]
+        // note that from is a reserved keyword in js so wanna stay away
+        /** @type {{ from_: string, to: string }[]} */
+        this.moveQueue = [];
+
         this.picker = new MousePicker(this);
         this.picker.onClicked((obj) => {
             if (obj !== null) {
@@ -282,22 +289,14 @@ export class Chess extends Scene {
                 else {
                     console.log("Move: ", this.selected_square, str);
                     console.log(this.board);
-
-                    // let start_file = this.selected_square.substring(5, 6);
-                    // let start_rank = this.selected_square.charCodeAt(6) - '0'.charCodeAt(0);
-                    // let end_file = str.substring(5, 6);
-                    // let end_rank = str.charCodeAt(6) - '0'.charCodeAt(0);
-                    this.destination_square = str;
-                    // if (this.move(start_file, start_rank, end_file, end_rank)) {
-                    //     console.log("Move successful!");
-                    // }
-                    // else {
-                    //     console.log("Move unsuccessful");
-                    // }
-
-                    // this.selected_square = "";
+                    network.sendMessage(MOVE, [this.selected_square, str]);
+                    this.selected_square = '';
                 }
             }
+        });
+
+        network.onMessage(MOVE, (from_, to) => {
+            this.moveQueue.push({ from_, to });
         });
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 10, 20), vec3(0, 0, 0), vec3(0, 1, 0));
@@ -831,7 +830,6 @@ export class Chess extends Scene {
             case 14:
             case 15:
             case 16:
-                console.log("fjslkfjslf");
                 possible = this.can_move_pawn(this.get_piece(file, rank), end_file, end_rank);
                 break;
         }
@@ -865,25 +863,23 @@ export class Chess extends Scene {
         // display():  Called once per frame of animation.
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
 
-        if (this.selected_square !== "" && this.destination_square !== "") {
-            let start_file = this.selected_square.substring(5, 6);
-            let start_rank = this.selected_square.charCodeAt(6) - '0'.charCodeAt(0);
-            let end_file = this.destination_square.substring(5, 6);
-            let end_rank = this.destination_square.charCodeAt(6) - '0'.charCodeAt(0);
-            // this.destination_square_squre = str;
-            if (this.move(start_file, start_rank, end_file, end_rank, t)) {
-                console.log("Move successful!");
-            }
-            else {
-                console.log("Move unsuccessful");
-            }
+        for (const move of this.moveQueue) {
+            if (move.from_ !== "" && move.to !== "") {
+                const start_file = move.from_.substring(5, 6);
+                const start_rank = move.from_.charCodeAt(6) - '0'.charCodeAt(0);
+                const end_file = move.to.substring(5, 6);
+                const end_rank = move.to.charCodeAt(6) - '0'.charCodeAt(0);
 
-            this.selected_square = "";
-            this.destination_square = "";
-            // this.piece_select.move_to(this.grid_select.getFile(), this.grid_select.getRank(), t);
-            // this.piece_select = null;
-            // this.grid_select = null;
+                if (this.move(start_file, start_rank, end_file, end_rank, t)) {
+                    console.log({ move }, 'successful');
+                }
+                else {
+                    console.log({ move }, 'failed');
+                }
+            }
         }
+        // clear move queue
+        this.moveQueue.splice(0, this.moveQueue.length);
 
         // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
         if (!context.scratchpad.controls) {

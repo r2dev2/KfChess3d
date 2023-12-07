@@ -2,7 +2,7 @@ const url = end => `https://nicenotifier.r2dev2bb8.repl.co${end}`;
 // ping message has data of send timestamp
 export const PING = 0;
 
-// move message has data of [piece, file, rank]
+// move message has data of [from, to]
 export const MOVE = 1;
 
 export class Network {
