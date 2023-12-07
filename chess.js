@@ -172,9 +172,9 @@ class GridSquare {
         return `Grid(${files[this.#file]}${this.#rank + 1})`;
     }
 
-    getFile() { return this.#file }
+    getFile() { return this.#file; }
 
-    getRank() { return this.#rank }
+    getRank() { return this.#rank; }
 }
 
 export class Chess extends Scene {
@@ -287,13 +287,14 @@ export class Chess extends Scene {
                 else {
                     console.log("Move: ", this.selected_square, str);
                     console.log(this.board);
-                    this.moveQueue.push({
-                        from_: this.selected_square,
-                        to: str
-                    });
+                    network.sendMessage(MOVE, [this.selected_square, str]);
                     this.selected_square = '';
                 }
             }
+        });
+
+        network.onMessage(MOVE, (from_, to) => {
+            this.moveQueue.push({ from_, to });
         });
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 10, 20), vec3(0, 0, 0), vec3(0, 1, 0));
@@ -827,7 +828,6 @@ export class Chess extends Scene {
             case 14:
             case 15:
             case 16:
-                console.log("fjslkfjslf");
                 possible = this.can_move_pawn(this.get_piece(file, rank), end_file, end_rank);
                 break;
         }
