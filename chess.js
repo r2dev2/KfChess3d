@@ -548,19 +548,19 @@ export class Chess extends Scene {
                 break;
             }
 
-            let pos = false;
+
 
             if (piece.flip === 1 && this.piece_at(file + d, rank + d) <= 0) {
                 possible_moves.push([file + d, rank + d]);
-                pos = true;
+
             }
 
             if (piece.flip === -1 && this.piece_at(file + d, rank + d) >= 0) {
                 possible_moves.push([file + d, rank + d]);
-                pos = true;
+
             }
 
-            if (!pos) {
+            if (this.piece_at(file + d, rank + d) !== 0) {
                 break;
             }
         }
@@ -570,19 +570,17 @@ export class Chess extends Scene {
                 break;
             }
 
-            let pos = false;
-
             if (piece.flip === 1 && this.piece_at(file + d, rank + d) <= 0) {
                 possible_moves.push([file + d, rank + d]);
-                pos = true;
+
             }
 
             if (piece.flip === -1 && this.piece_at(file + d, rank + d) >= 0) {
                 possible_moves.push([file + d, rank + d]);
-                pos = true;
+
             }
 
-            if (!pos) {
+            if (this.piece_at(file + d, rank + d) !== 0) {
                 break;
             }
         }
@@ -592,19 +590,17 @@ export class Chess extends Scene {
                 break;
             }
 
-            let pos = false;
-
             if (piece.flip === 1 && this.piece_at(file + d, rank - d) <= 0) {
                 possible_moves.push([file + d, rank - d]);
-                pos = true;
+
             }
 
             if (piece.flip === -1 && this.piece_at(file + d, rank - d) >= 0) {
                 possible_moves.push([file + d, rank - d]);
-                pos = true;
+
             }
 
-            if (!pos) {
+            if (this.piece_at(file + d, rank - d) !== 0) {
                 break;
             }
 
@@ -615,19 +611,17 @@ export class Chess extends Scene {
                 break;
             }
 
-            let pos = false;
-
             if (piece.flip === 1 && this.piece_at(file + d, rank - d) <= 0) {
                 possible_moves.push([file + d, rank - d]);
-                pos = true;
+
             }
 
             if (piece.flip === -1 && this.piece_at(file + d, rank - d) >= 0) {
                 possible_moves.push([file + d, rank - d]);
-                pos = true;
+
             }
 
-            if (!pos) {
+            if (this.piece_at(file + d, rank - d) !== 0) {
                 break;
             }
 
@@ -658,19 +652,19 @@ export class Chess extends Scene {
                 break;
             }
 
-            let pos = false;
+
 
             if (piece.flip === 1 && this.piece_at(file + d, rank) <= 0) {
                 possible_moves.push([file + d, rank]);
-                pos = true;
+
             }
 
             if (piece.flip === -1 && this.piece_at(file + d, rank) >= 0) {
                 possible_moves.push([file + d, rank]);
-                pos = true;
+
             }
 
-            if (!pos) {
+            if (this.piece_at(file + d, rank) !== 0) {
                 break;
             }
         }
@@ -680,19 +674,18 @@ export class Chess extends Scene {
                 break;
             }
 
-            let pos = false;
 
             if (piece.flip === 1 && this.piece_at(file + d, rank) <= 0) {
                 possible_moves.push([file + d, rank]);
-                pos = true;
+
             }
 
             if (piece.flip === -1 && this.piece_at(file + d, rank) >= 0) {
                 possible_moves.push([file + d, rank]);
-                pos = true;
+
             }
 
-            if (!pos) {
+            if (this.piece_at(file + d, rank) !== 0) {
                 break;
             }
         }
@@ -702,19 +695,16 @@ export class Chess extends Scene {
                 break;
             }
 
-            let pos = false;
 
             if (piece.flip === 1 && this.piece_at(file, rank + d) <= 0) {
                 possible_moves.push([file, rank + d]);
-                pos = true;
             }
 
             if (piece.flip === -1 && this.piece_at(file, rank + d) >= 0) {
                 possible_moves.push([file, rank + d]);
-                pos = true;
             }
 
-            if (!pos) {
+            if (this.piece_at(file, rank + d) !== 0) {
                 break;
             }
 
@@ -725,19 +715,16 @@ export class Chess extends Scene {
                 break;
             }
 
-            let pos = false;
 
             if (piece.flip === 1 && this.piece_at(file, rank + d) <= 0) {
                 possible_moves.push([file, rank + d]);
-                pos = true;
             }
 
             if (piece.flip === -1 && this.piece_at(file, rank + d) >= 0) {
                 possible_moves.push([file, rank + d]);
-                pos = true;
             }
 
-            if (!pos) {
+            if (this.piece_at(file, rank + d) !== 0) {
                 break;
             }
 
