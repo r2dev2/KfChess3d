@@ -9,6 +9,7 @@ const {
 
 const PIECE_VELOCITY = 10;
 const PIECE_HEIGHT = 2;
+const PIECE_RADIUS = 1;
 const IDLE = 0, MOVING = 1, EATEN = 2;
 
 class Piece {
@@ -845,14 +846,6 @@ export class Chess extends Scene {
 
         // tell piece to start moving
 
-        let p2 = this.get_piece(file2, rank2);
-        if (p2) {
-            p2.kill();
-            if (p2.is_king) {
-                // can add win animation function here
-                this.reset_board();
-            }
-        }
         p.move_to(file2, rank2, t);
         this.board[file2][rank2] = this.board[file][rank];
         this.board[file][rank] = 0;
@@ -951,6 +944,53 @@ export class Chess extends Scene {
                 piece.shape.draw(context, program_state, piece.compute_transform(t),
                     this.materials.piece.override({ color: hex_color("#000000") }));
             }
+        });
+
+        this.white_pieces.forEach((piece, i) => {
+            if (!piece.alive) {
+                return;
+            }
+            
+            const piece_matrix = piece.compute_transform(t);
+            const piece_x = piece_matrix[0][3];
+            const piece_y = piece_matrix[1][3];
+            const piece_z = piece_matrix[2][3];
+            this.black_pieces.forEach((enemy, j)=>{
+                if(piece.state.mode !== MOVING && enemy.state.mode !== MOVING){
+                    return;
+                }
+                if(!enemy.alive){
+                    return;
+                }
+                const enemy_matrix = enemy.compute_transform(t);
+                const enemy_x = enemy_matrix[0][3];
+                const enemy_y = enemy_matrix[1][3];
+                const enemy_z = enemy_matrix[2][3];
+                
+                const kill = (piece) =>{
+                    piece.kill();
+                    if(piece.is_king === true){
+                        this.reset_board();
+                    }
+                };
+
+                if(Math.sqrt((piece_x-enemy_x)**2+(piece_z-enemy_z)**2) < PIECE_RADIUS){
+                    if(piece.state.mode === MOVING && enemy.state.mode !== MOVING){
+                        kill(enemy);
+                    }
+                    else if(piece.state.mode !== MOVING && enemy.state.mode === MOVING){
+                        kill(piece);
+                    }
+                    else{
+                        if(piece_y>enemy_y){
+                            kill(enemy);
+                        }
+                        else{ 
+                            kill(piece);
+                        }
+                    }
+                }
+            })
         });
 
         // draw the chess board
