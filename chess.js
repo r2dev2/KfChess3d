@@ -337,7 +337,7 @@ export class Chess extends Scene {
             new Piece(this.shapes.white_queen, 'd', 1, "white"),
             new Piece(this.shapes.white_king, 'e', 1, "white", -0.3, 1, true),
             new Piece(this.shapes.white_bishop, 'f', 1, "white"),
-            new Piece(this.shapes.white_knight, 'g', 1, "white", -0.8, 0.6),
+            new Piece(this.shapes.white_knight, 'g', 1, "white", -0.8, 0.5),
             new Piece(this.shapes.white_rook, 'h', 1, "white", -0.3),
             new Piece(this.shapes.white_pawn, 'a', 2, "white", -0.6, 0.6),
             new Piece(this.shapes.white_pawn, 'b', 2, "white", -0.6, 0.6),
