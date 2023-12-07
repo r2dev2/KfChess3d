@@ -182,6 +182,8 @@ export class Chess extends Scene {
         // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
         super();
 
+        this.player = 0;
+
         // At the beginning of our program, load one of each of these shape definitions onto the GPU.
         this.shapes = {
             white_king: new Shape_From_File('assets/chess/White_King.obj'),
@@ -391,8 +393,8 @@ export class Chess extends Scene {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
         this.key_triggered_button("Reset Game", ["Control", "0"], () => this.reset_board());
         this.new_line();
-        this.key_triggered_button("Attach to planet 1", ["Control", "1"], () => this.attached = () => this.planet_1);
-        this.key_triggered_button("Attach to planet 2", ["Control", "2"], () => this.attached = () => this.planet_2);
+        this.key_triggered_button("Play as White", ["Control", "1"], () => this.player = 0);
+        this.key_triggered_button("Play as Black", ["Control", "2"], () => this.player = 1);
         this.new_line();
         this.key_triggered_button("Attach to planet 3", ["Control", "3"], () => this.attached = () => this.planet_3);
         this.key_triggered_button("Attach to planet 4", ["Control", "4"], () => this.attached = () => this.planet_4);
@@ -889,6 +891,17 @@ export class Chess extends Scene {
             // Define the global camera and projection matrices, which are stored in program_state.
             program_state.set_camera(this.initial_camera_location);
         }
+        if(this.player === 0){
+            let desired = Mat4.inverse(Mat4.identity().times(Mat4.rotation(0.4,1,0,0)).times(Mat4.rotation(Math.PI,0,1,0)).times(Mat4.translation(9,4.5,16.5)));
+            program_state.set_camera(desired);
+            this.player=2; 
+        }
+        else if(this.player === 1){
+            let desired = Mat4.inverse(Mat4.identity().times(Mat4.rotation(-0.4,1,0,0)).times(Mat4.translation(-8,-2,32)));
+            program_state.set_camera(desired);
+            this.player=2; 
+        }
+
 
         program_state.projection_transform = Mat4.perspective(
             Math.PI / 4, context.width / context.height, .1, 1000);
