@@ -8,13 +8,19 @@ const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene, Texture
 } = tiny;
 
-const PIECE_VELOCITY = 10;
+const PIECE_VELOCITY = 2;
 const PIECE_HEIGHT = 2;
 const PIECE_RADIUS = 1;
 const IDLE = 0, MOVING = 1, EATEN = 2;
+const PAWN = 1;
+const KNIGHT = 2;
+const BISHOP = 3;
+const ROOK = 4;
+const QUEEN = 5;
+const KING = 6;
 
 class Piece {
-    constructor(shape, file, rank, piece_color, translation = 0, scale = 1, is_king = false) {
+    constructor(shape, file, rank, piece_color, translation = 0, scale = 1, piece = PAWN) {
         this.shape = shape;
         this.translation = translation;
         this.scale = scale;
@@ -40,7 +46,7 @@ class Piece {
         this.model_transform = this.model_transform.times(Mat4.translation(-this.file * 2.4, this.translation, this.rank * 2.4).times(Mat4.scale(this.scale, this.scale, this.scale * this.flip)));
         this.alive = 1;
 
-        this.is_king = is_king;
+        this.piece = piece;
 
     }
 
@@ -207,14 +213,14 @@ export class Chess extends Scene {
         };
 
         this.white_pieces = [
-            new Piece(this.shapes.white_rook, 'a', 1, "white", -0.3),
-            new Piece(this.shapes.white_knight, 'b', 1, "white", -0.8, 0.5),
-            new Piece(this.shapes.white_bishop, 'c', 1, "white"),
-            new Piece(this.shapes.white_queen, 'd', 1, "white"),
-            new Piece(this.shapes.white_king, 'e', 1, "white", -0.3, 1, true),
-            new Piece(this.shapes.white_bishop, 'f', 1, "white"),
+            new Piece(this.shapes.white_rook, 'a', 1, "white", -0.3, 1, ROOK),
+            new Piece(this.shapes.white_knight, 'b', 1, "white", -0.8, 0.5, KNIGHT),
+            new Piece(this.shapes.white_bishop, 'c', 1, "white", 0, 1, BISHOP),
+            new Piece(this.shapes.white_queen, 'd', 1, "white", 0, 1, QUEEN),
+            new Piece(this.shapes.white_king, 'e', 1, "white", -0.3, 1, KING),
+            new Piece(this.shapes.white_bishop, 'f', 1, "white", 0, 1, BISHOP),
             new Piece(this.shapes.white_knight, 'g', 1, "white", -0.8, 0.5),
-            new Piece(this.shapes.white_rook, 'h', 1, "white", -0.3),
+            new Piece(this.shapes.white_rook, 'h', 1, "white", -0.3, 1, ROOK),
             new Piece(this.shapes.white_pawn, 'a', 2, "white", -0.6, 0.6),
             new Piece(this.shapes.white_pawn, 'b', 2, "white", -0.6, 0.6),
             new Piece(this.shapes.white_pawn, 'c', 2, "white", -0.6, 0.6),
@@ -226,14 +232,14 @@ export class Chess extends Scene {
         ];
 
         this.black_pieces = [
-            new Piece(this.shapes.white_rook, 'a', 8, "black", -0.3),
-            new Piece(this.shapes.white_knight, 'b', 8, "black", -0.8, 0.5),
-            new Piece(this.shapes.white_bishop, 'c', 8, "black"),
-            new Piece(this.shapes.white_queen, 'd', 8, "black"),
-            new Piece(this.shapes.white_king, 'e', 8, "black", -0.3, 1, true),
-            new Piece(this.shapes.white_bishop, 'f', 8, "black"),
-            new Piece(this.shapes.white_knight, 'g', 8, "black", -0.8, 0.5),
-            new Piece(this.shapes.white_rook, 'h', 8, "black", -0.3),
+            new Piece(this.shapes.white_rook, 'a', 8, "black", -0.3, 1, ROOK),
+            new Piece(this.shapes.white_knight, 'b', 8, "black", -0.8, 0.5, KNIGHT),
+            new Piece(this.shapes.white_bishop, 'c', 8, "black", 0, 1, BISHOP),
+            new Piece(this.shapes.white_queen, 'd', 8, "black", 0, 1, QUEEN),
+            new Piece(this.shapes.white_king, 'e', 8, "black", -0.3, 1, KING),
+            new Piece(this.shapes.white_bishop, 'f', 8, "black", 0, 1, BISHOP),
+            new Piece(this.shapes.white_knight, 'g', 8, "black", -0.8, 0.5, KNIGHT),
+            new Piece(this.shapes.white_rook, 'h', 8, "black", -0.3, 1, ROOK),
             new Piece(this.shapes.white_pawn, 'a', 7, "black", -0.6, 0.6),
             new Piece(this.shapes.white_pawn, 'b', 7, "black", -0.6, 0.6),
             new Piece(this.shapes.white_pawn, 'c', 7, "black", -0.6, 0.6),
@@ -323,11 +329,11 @@ export class Chess extends Scene {
             [0, 0, 0, 0, 0, 0, 0, 0]];
 
         this.white_pieces.forEach((p, i) => {
-            this.board[p.file][p.rank] = i + 1;
+            this.board[p.file][p.rank] = p.piece * p.flip;
         });
 
         this.black_pieces.forEach((p, i) => {
-            this.board[p.file][p.rank] =  -(i + 1);
+            this.board[p.file][p.rank] =  p.piece * p.flip;
         });
 
         // initial position to test code
@@ -343,14 +349,14 @@ export class Chess extends Scene {
 
     reset_board() {
         this.white_pieces = [
-            new Piece(this.shapes.white_rook, 'a', 1, "white", -0.3),
-            new Piece(this.shapes.white_knight, 'b', 1, "white", -0.8, 0.5),
-            new Piece(this.shapes.white_bishop, 'c', 1, "white"),
-            new Piece(this.shapes.white_queen, 'd', 1, "white"),
-            new Piece(this.shapes.white_king, 'e', 1, "white", -0.3, 1, true),
-            new Piece(this.shapes.white_bishop, 'f', 1, "white"),
+            new Piece(this.shapes.white_rook, 'a', 1, "white", -0.3, 1, ROOK),
+            new Piece(this.shapes.white_knight, 'b', 1, "white", -0.8, 0.5, KNIGHT),
+            new Piece(this.shapes.white_bishop, 'c', 1, "white", 0, 1, BISHOP),
+            new Piece(this.shapes.white_queen, 'd', 1, "white", 0, 1, QUEEN),
+            new Piece(this.shapes.white_king, 'e', 1, "white", -0.3, 1, KING),
+            new Piece(this.shapes.white_bishop, 'f', 1, "white", 0, 1, BISHOP),
             new Piece(this.shapes.white_knight, 'g', 1, "white", -0.8, 0.5),
-            new Piece(this.shapes.white_rook, 'h', 1, "white", -0.3),
+            new Piece(this.shapes.white_rook, 'h', 1, "white", -0.3, 1, ROOK),
             new Piece(this.shapes.white_pawn, 'a', 2, "white", -0.6, 0.6),
             new Piece(this.shapes.white_pawn, 'b', 2, "white", -0.6, 0.6),
             new Piece(this.shapes.white_pawn, 'c', 2, "white", -0.6, 0.6),
@@ -362,14 +368,14 @@ export class Chess extends Scene {
         ];
 
         this.black_pieces = [
-            new Piece(this.shapes.white_rook, 'a', 8, "black", -0.3),
-            new Piece(this.shapes.white_knight, 'b', 8, "black", -0.8, 0.5),
-            new Piece(this.shapes.white_bishop, 'c', 8, "black"),
-            new Piece(this.shapes.white_queen, 'd', 8, "black"),
-            new Piece(this.shapes.white_king, 'e', 8, "black", -0.3, 1, true),
-            new Piece(this.shapes.white_bishop, 'f', 8, "black"),
-            new Piece(this.shapes.white_knight, 'g', 8, "black", -0.8, 0.5),
-            new Piece(this.shapes.white_rook, 'h', 8, "black", -0.3),
+            new Piece(this.shapes.white_rook, 'a', 8, "black", -0.3, 1, ROOK),
+            new Piece(this.shapes.white_knight, 'b', 8, "black", -0.8, 0.5, KNIGHT),
+            new Piece(this.shapes.white_bishop, 'c', 8, "black", 0, 1, BISHOP),
+            new Piece(this.shapes.white_queen, 'd', 8, "black", 0, 1, QUEEN),
+            new Piece(this.shapes.white_king, 'e', 8, "black", -0.3, 1, KING),
+            new Piece(this.shapes.white_bishop, 'f', 8, "black", 0, 1, BISHOP),
+            new Piece(this.shapes.white_knight, 'g', 8, "black", -0.8, 0.5, KNIGHT),
+            new Piece(this.shapes.white_rook, 'h', 8, "black", -0.3, 1, ROOK),
             new Piece(this.shapes.white_pawn, 'a', 7, "black", -0.6, 0.6),
             new Piece(this.shapes.white_pawn, 'b', 7, "black", -0.6, 0.6),
             new Piece(this.shapes.white_pawn, 'c', 7, "black", -0.6, 0.6),
@@ -390,11 +396,11 @@ export class Chess extends Scene {
             [0, 0, 0, 0, 0, 0, 0, 0]];
 
         this.white_pieces.forEach((p, i) => {
-            this.board[p.file][p.rank] = i + 1;
+            this.board[p.file][p.rank] = p.piece * p.flip;
         });
 
         this.black_pieces.forEach((p, i) => {
-            this.board[p.file][p.rank] =  -(i + 1);
+            this.board[p.file][p.rank] =  p.piece * p.flip;
         });
 
 
@@ -788,13 +794,20 @@ export class Chess extends Scene {
     // assumes the piece location is valid
     // uses numbers
     get_piece(file, rank) {
-        let p = this.piece_at(file, rank);
-        if (p > 0) {
-            return this.white_pieces[p - 1];
-        }
-        else {
-            return this.black_pieces[-p - 1];
-        }
+        let p;
+        this.white_pieces.forEach((piece) => {
+           if (piece.file === file && piece.rank === rank) {
+               p = piece;
+           }
+        });
+
+        this.black_pieces.forEach((piece) => {
+            if (piece.file === file && piece.rank === rank) {
+                p = piece;
+            }
+        });
+
+        return p;
     }
 
     // uses letters and nubmers like move("e", 4, "e", 5)
@@ -809,32 +822,22 @@ export class Chess extends Scene {
         let possible = false;
 
         switch (Math.abs(this.piece_at(file, rank))) {
-            case 1:
-            case 8:
+            case ROOK:
                 possible = this.can_move_rook(this.get_piece(file, rank), end_file, end_rank);
                 break;
-            case 2:
-            case 7:
+            case KNIGHT:
                 possible = this.can_move_knight(this.get_piece(file, rank), end_file, end_rank);
                 break;
-            case 3:
-            case 6:
+            case BISHOP:
                 possible = this.can_move_bishop(this.get_piece(file, rank), end_file, end_rank);
                 break;
-            case 4:
+            case QUEEN:
                 possible = this.can_move_queen(this.get_piece(file, rank), end_file, end_rank);
                 break;
-            case 5:
+            case KING:
                 possible = this.can_move_king(this.get_piece(file, rank), end_file, end_rank);
                 break;
-            case 9:
-            case 10:
-            case 11:
-            case 12:
-            case 13:
-            case 14:
-            case 15:
-            case 16:
+            case PAWN:
                 possible = this.can_move_pawn(this.get_piece(file, rank), end_file, end_rank);
                 break;
         }
@@ -849,16 +852,32 @@ export class Chess extends Scene {
         // tell piece to start moving
 
         p.move_to(file2, rank2, t);
-        this.board[file2][rank2] = this.board[file][rank];
         this.board[file][rank] = 0;
 
         return true;
     }
 
+    update_board() {
+        // update white pieces
+        this.white_pieces.forEach((piece) => {
+            if (piece.state.mode === IDLE) {
+                this.board[piece.file][piece.rank] = piece.piece * piece.flip;
+            }
+        });
+
+        this.black_pieces.forEach((piece) => {
+            if (piece.state.mode === IDLE) {
+                this.board[piece.file][piece.rank] = piece.piece * piece.flip;
+            }
+        });
+    }
 
     display(context, program_state) {
         // display():  Called once per frame of animation.
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
+
+        // update board state
+        this.update_board();
 
         for (const move of this.moveQueue) {
             if (move.from_ !== "" && move.to !== "") {
@@ -913,9 +932,10 @@ export class Chess extends Scene {
         let model_transform = Mat4.identity();
 
 
-        let selected_piece = 0;
+        let selected_file = -1, selected_rank = -1;
         if (this.selected_square !== "") {
-            selected_piece = this.piece_at(this.selected_square.charCodeAt(5) - 'a'.charCodeAt(0), (this.selected_square.charCodeAt(6) - '0'.charCodeAt(0)) - 1);
+            selected_file = this.selected_square.charCodeAt(5) - 'a'.charCodeAt(0);
+            selected_rank = this.selected_square.charCodeAt(6) - '0'.charCodeAt(0) - 1;
         }
         this.white_pieces.forEach((piece, i) => {
             // console.log(piece.model_transform);
@@ -923,7 +943,7 @@ export class Chess extends Scene {
                 return;
             }
 
-            if (selected_piece > 0 && selected_piece - 1 === i) {
+            if (selected_file === piece.file && selected_rank === piece.rank) {
                 piece.shape.draw(context, program_state, piece.compute_transform(t).times(Mat4.rotation(t, 0, 1, 0)),
                     this.materials.piece);
             }
@@ -938,7 +958,7 @@ export class Chess extends Scene {
                 return;
             }
 
-            if (selected_piece < 0 && - selected_piece - 1 === i) {
+            if (selected_file === piece.file && selected_rank === piece.rank) {
                 piece.shape.draw(context, program_state, piece.compute_transform(t).times(Mat4.rotation(t, 0, 1, 0)),
                     this.materials.piece.override({ color: hex_color("#000000") }));
             }
