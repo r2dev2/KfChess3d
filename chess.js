@@ -114,7 +114,7 @@ class Piece {
     }
 
     kill() {
-        this.alive = 0;
+        this.state.mode = EATEN;
     }
 }
 
@@ -863,11 +863,19 @@ export class Chess extends Scene {
             if (piece.state.mode === IDLE) {
                 this.board[piece.file][piece.rank] = piece.piece * piece.flip;
             }
+
+            if (piece.state.mode === EATEN) {
+                this.board[piece.file][piece.rank] = 0;
+            }
         });
 
         this.black_pieces.forEach((piece) => {
             if (piece.state.mode === IDLE) {
                 this.board[piece.file][piece.rank] = piece.piece * piece.flip;
+            }
+
+            if (piece.state.mode === EATEN) {
+                this.board[piece.file][piece.rank] = 0;
             }
         });
     }
@@ -939,7 +947,7 @@ export class Chess extends Scene {
         }
         this.white_pieces.forEach((piece, i) => {
             // console.log(piece.model_transform);
-            if (!piece.alive) {
+            if (piece.state.mode === EATEN) {
                 return;
             }
 
@@ -954,7 +962,7 @@ export class Chess extends Scene {
         });
 
         this.black_pieces.forEach((piece, i) => {
-            if (!piece.alive) {
+            if (piece.state.mode === EATEN) {
                 return;
             }
 
@@ -994,6 +1002,8 @@ export class Chess extends Scene {
                     if(piece.is_king === true){
                         this.reset_board();
                     }
+
+
                 };
 
                 if(Math.sqrt((piece_x-enemy_x)**2+(piece_z-enemy_z)**2) < PIECE_RADIUS){
