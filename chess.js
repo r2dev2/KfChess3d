@@ -860,9 +860,6 @@ export class Chess extends Scene {
     update_board() {
         // update white pieces
         this.white_pieces.forEach((piece) => {
-            if (piece.state.mode === IDLE) {
-                this.board[piece.file][piece.rank] = piece.piece * piece.flip;
-            }
 
             if (piece.state.mode === EATEN) {
                 this.board[piece.file][piece.rank] = 0;
@@ -870,13 +867,24 @@ export class Chess extends Scene {
         });
 
         this.black_pieces.forEach((piece) => {
-            if (piece.state.mode === IDLE) {
-                this.board[piece.file][piece.rank] = piece.piece * piece.flip;
-            }
 
             if (piece.state.mode === EATEN) {
                 this.board[piece.file][piece.rank] = 0;
             }
+        });
+
+        this.white_pieces.forEach((piece) => {
+            if (piece.state.mode === IDLE) {
+                this.board[piece.file][piece.rank] = piece.piece * piece.flip;
+            }
+
+        });
+
+        this.black_pieces.forEach((piece) => {
+            if (piece.state.mode === IDLE) {
+                this.board[piece.file][piece.rank] = piece.piece * piece.flip;
+            }
+
         });
     }
 
