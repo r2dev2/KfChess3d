@@ -253,9 +253,9 @@ export class Chess extends Scene {
         // *** Materials
         this.materials = {
             piece: new Material(new Cooldown_Shader(),
-                { ambient: .4, diffusivity: .6, color: hex_color("#ffffff"), texture: new Texture("assets/lee.jpg"), cooldown: 0. }),
+                { ambient: .4, diffusivity: .6, specularity: 0.2, color: hex_color("#ffffff"), texture: new Texture("assets/lee.jpg"), cooldown: 0. }),
             grid: new Material(new defs.Phong_Shader(),
-                { ambient: .4, diffusivity: .6, color: hex_color("#000000") }),
+                { ambient: .4, diffusivity: .6, specularity: 0.2, color: hex_color("#000000") }),
             top: new Material(new defs.Textured_Phong(),
             { ambient: 0.4, diffusivity: 1, color: hex_color("#ffffff"), texture: new Texture("assets/background/top.png") }),
             right: new Material(new defs.Textured_Phong(),
