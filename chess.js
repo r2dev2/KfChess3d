@@ -121,7 +121,6 @@ class Piece {
     }
 
     getCooldown() {
-        console.log(this.state.cooldown_left)
         return this.state.cooldown_left / COOLDOWN;
     }
 
@@ -459,6 +458,31 @@ export class Chess extends Scene {
         return this.board[file][rank];
     }
 
+    check_piece_at(file, rank, color) {
+        let possible = false;
+        if (color === 1) {
+            this.white_pieces.forEach((piece) => {
+                if (piece.state.mode === EATEN) {
+                    return;
+                }
+                if (piece.file === file && piece.rank === rank) {
+                    possible = true;
+                }
+            })
+        }
+        else {
+            this.black_pieces.forEach((piece) => {
+                if (piece.state.mode === EATEN) {
+                    return;
+                }
+                if (piece.file === file && piece.rank === rank) {
+                    possible = true;
+                }
+            })
+        }
+        return possible;
+    }
+
     // all the can move functions use letter and number like can_move_pawn(pawn, "e", 4)
     // requirement: passes in a pawn
     can_move_pawn(piece, end_file, end_rank) {
@@ -469,45 +493,42 @@ export class Chess extends Scene {
 
         let [file, rank] = [piece.file, piece.rank];
 
-        console.log(file, rank);
-        console.log(end_file, end_rank);
-
         let possible_moves = [];
         if (piece.flip === 1) {
 
-
-
-            if (rank < 7 && !this.piece_at(file, rank + 1)) {
+            if (rank < 7 && !this.piece_at(file, rank + 1) && !this.check_piece_at(file, rank + 1, piece.flip)) {
                 possible_moves.push([file, rank + 1]);
 
                 if (rank === 1) {
-                    if (!this.piece_at(file, rank + 2)) {
+                    if (!this.piece_at(file, rank + 2) && !this.check_piece_at(file, rank + 2, piece.flip)) {
                         possible_moves.push([file, rank + 2]);
                     }
                 }
             }
 
             for (let i = file - 1; i <= file + 1; i+=2) {
-                if (this.piece_at(i, rank + 1)) {
+                if (this.piece_at(i, rank + 1) && !this.check_piece_at(i, rank + 1, piece.flip)) {
                     possible_moves.push([i, rank + 1]);
                 }
             }
         }
         else {
             // double if at initial position
-            if (rank === 6) {
-                if (!this.piece_at(file, rank - 2)) {
-                    possible_moves.push([file, rank - 2]);
+
+
+
+            if (rank > 0 && !this.piece_at(file, rank - 1) && !this.check_piece_at(file, rank - 1, piece.flip)) {
+                possible_moves.push([file, rank - 1]);
+
+                if (rank === 6) {
+                    if (!this.piece_at(file, rank - 2) && !this.check_piece_at(file, rank - 2, piece.flip)) {
+                        possible_moves.push([file, rank - 2]);
+                    }
                 }
             }
 
-
-            if (rank > 0 && !this.piece_at(file, rank - 1)) {
-                possible_moves.push([file, rank - 1]);
-            }
-
             for (let i = file - 1; i <= file + 1; i+=2) {
-                if (this.piece_at(i, rank - 1)) {
+                if (this.piece_at(i, rank - 1) && !this.check_piece_at(i, rank - 1, piece.flip)) {
                     possible_moves.push([i, rank - 1]);
                 }
             }
@@ -542,10 +563,10 @@ export class Chess extends Scene {
             if (!this.is_valid_square(file + square[0], rank + square[1])) {
                 return;
             }
-            if (piece.flip === 1 && this.piece_at(file + square[0], rank + square[1]) <= 0) {
+            if (piece.flip === 1 && this.piece_at(file + square[0], rank + square[1]) <= 0 && !this.check_piece_at(file + square[0], rank + square[1], piece.flip)) {
                 possible_moves.push([file + square[0], rank + square[1]]);
             }
-            else if (piece.flip === -1 && this.piece_at(file + square[0], rank + square[1]) >= 0) {
+            else if (piece.flip === -1 && this.piece_at(file + square[0], rank + square[1]) >= 0 && !this.check_piece_at(file + square[0], rank + square[1], piece.flip)) {
                 possible_moves.push([file + square[0], rank + square[1]]);
             }
         })
@@ -575,19 +596,17 @@ export class Chess extends Scene {
                 break;
             }
 
-
-
-            if (piece.flip === 1 && this.piece_at(file + d, rank + d) <= 0) {
+            if (piece.flip === 1 && this.piece_at(file + d, rank + d) <= 0 && !this.check_piece_at(file + d, rank + d, piece.flip)) {
                 possible_moves.push([file + d, rank + d]);
 
             }
 
-            if (piece.flip === -1 && this.piece_at(file + d, rank + d) >= 0) {
+            if (piece.flip === -1 && this.piece_at(file + d, rank + d) >= 0 && !this.check_piece_at(file + d, rank + d, piece.flip)) {
                 possible_moves.push([file + d, rank + d]);
 
             }
 
-            if (this.piece_at(file + d, rank + d) !== 0) {
+            if (this.piece_at(file + d, rank + d) !== 0 && !this.check_piece_at(file + d, rank + d, piece.flip)) {
                 break;
             }
         }
@@ -597,17 +616,17 @@ export class Chess extends Scene {
                 break;
             }
 
-            if (piece.flip === 1 && this.piece_at(file + d, rank + d) <= 0) {
+            if (piece.flip === 1 && this.piece_at(file + d, rank + d) <= 0 && !this.check_piece_at(file + d, rank + d, piece.flip)) {
                 possible_moves.push([file + d, rank + d]);
 
             }
 
-            if (piece.flip === -1 && this.piece_at(file + d, rank + d) >= 0) {
+            if (piece.flip === -1 && this.piece_at(file + d, rank + d) >= 0 && !this.check_piece_at(file + d, rank + d, piece.flip)) {
                 possible_moves.push([file + d, rank + d]);
 
             }
 
-            if (this.piece_at(file + d, rank + d) !== 0) {
+            if (this.piece_at(file + d, rank + d) !== 0 && !this.check_piece_at(file + d, rank + d, piece.flip)) {
                 break;
             }
         }
@@ -617,17 +636,17 @@ export class Chess extends Scene {
                 break;
             }
 
-            if (piece.flip === 1 && this.piece_at(file + d, rank - d) <= 0) {
+            if (piece.flip === 1 && this.piece_at(file + d, rank - d) <= 0 && !this.check_piece_at(file + d, rank - d, piece.flip)) {
                 possible_moves.push([file + d, rank - d]);
 
             }
 
-            if (piece.flip === -1 && this.piece_at(file + d, rank - d) >= 0) {
+            if (piece.flip === -1 && this.piece_at(file + d, rank - d) >= 0 && !this.check_piece_at(file + d, rank - d, piece.flip)) {
                 possible_moves.push([file + d, rank - d]);
 
             }
 
-            if (this.piece_at(file + d, rank - d) !== 0) {
+            if (this.piece_at(file + d, rank - d) !== 0 && !this.check_piece_at(file + d, rank - d, piece.flip)) {
                 break;
             }
 
@@ -638,17 +657,17 @@ export class Chess extends Scene {
                 break;
             }
 
-            if (piece.flip === 1 && this.piece_at(file + d, rank - d) <= 0) {
+            if (piece.flip === 1 && this.piece_at(file + d, rank - d) <= 0 && !this.check_piece_at(file + d, rank - d, piece.flip)) {
                 possible_moves.push([file + d, rank - d]);
 
             }
 
-            if (piece.flip === -1 && this.piece_at(file + d, rank - d) >= 0) {
+            if (piece.flip === -1 && this.piece_at(file + d, rank - d) >= 0 && !this.check_piece_at(file + d, rank - d, piece.flip)) {
                 possible_moves.push([file + d, rank - d]);
 
             }
 
-            if (this.piece_at(file + d, rank - d) !== 0) {
+            if (this.piece_at(file + d, rank - d) !== 0 && !this.check_piece_at(file + d, rank - d, piece.flip)) {
                 break;
             }
 
@@ -679,19 +698,17 @@ export class Chess extends Scene {
                 break;
             }
 
-
-
-            if (piece.flip === 1 && this.piece_at(file + d, rank) <= 0) {
+            if (piece.flip === 1 && this.piece_at(file + d, rank) <= 0 && !this.check_piece_at(file + d, rank, piece.flip)) {
                 possible_moves.push([file + d, rank]);
 
             }
 
-            if (piece.flip === -1 && this.piece_at(file + d, rank) >= 0) {
+            if (piece.flip === -1 && this.piece_at(file + d, rank) >= 0 && !this.check_piece_at(file + d, rank, piece.flip)) {
                 possible_moves.push([file + d, rank]);
 
             }
 
-            if (this.piece_at(file + d, rank) !== 0) {
+            if (this.piece_at(file + d, rank) !== 0 && !this.check_piece_at(file + d, rank, piece.flip)) {
                 break;
             }
         }
@@ -701,18 +718,17 @@ export class Chess extends Scene {
                 break;
             }
 
-
-            if (piece.flip === 1 && this.piece_at(file + d, rank) <= 0) {
+            if (piece.flip === 1 && this.piece_at(file + d, rank) <= 0 && !this.check_piece_at(file + d, rank, piece.flip)) {
                 possible_moves.push([file + d, rank]);
 
             }
 
-            if (piece.flip === -1 && this.piece_at(file + d, rank) >= 0) {
+            if (piece.flip === -1 && this.piece_at(file + d, rank) >= 0 && !this.check_piece_at(file + d, rank, piece.flip)) {
                 possible_moves.push([file + d, rank]);
 
             }
 
-            if (this.piece_at(file + d, rank) !== 0) {
+            if (this.piece_at(file + d, rank) !== 0 && !this.check_piece_at(file + d, rank, piece.flip)) {
                 break;
             }
         }
@@ -722,16 +738,17 @@ export class Chess extends Scene {
                 break;
             }
 
-
-            if (piece.flip === 1 && this.piece_at(file, rank + d) <= 0) {
+            if (piece.flip === 1 && this.piece_at(file, rank + d) <= 0 && !this.check_piece_at(file, rank + d, piece.flip)) {
                 possible_moves.push([file, rank + d]);
+
             }
 
-            if (piece.flip === -1 && this.piece_at(file, rank + d) >= 0) {
+            if (piece.flip === -1 && this.piece_at(file, rank + d) >= 0 && !this.check_piece_at(file, rank + d, piece.flip)) {
                 possible_moves.push([file, rank + d]);
+
             }
 
-            if (this.piece_at(file, rank + d) !== 0) {
+            if (this.piece_at(file, rank + d) !== 0 && !this.check_piece_at(file, rank + d, piece.flip)) {
                 break;
             }
 
@@ -742,16 +759,17 @@ export class Chess extends Scene {
                 break;
             }
 
-
-            if (piece.flip === 1 && this.piece_at(file, rank + d) <= 0) {
+            if (piece.flip === 1 && this.piece_at(file, rank + d) <= 0 && !this.check_piece_at(file, rank + d, piece.flip)) {
                 possible_moves.push([file, rank + d]);
+
             }
 
-            if (piece.flip === -1 && this.piece_at(file, rank + d) >= 0) {
+            if (piece.flip === -1 && this.piece_at(file, rank + d) >= 0 && !this.check_piece_at(file, rank + d, piece.flip)) {
                 possible_moves.push([file, rank + d]);
+
             }
 
-            if (this.piece_at(file, rank + d) !== 0) {
+            if (this.piece_at(file, rank + d) !== 0 && !this.check_piece_at(file, rank + d, piece.flip)) {
                 break;
             }
 
@@ -790,10 +808,10 @@ export class Chess extends Scene {
             if (!this.is_valid_square(file + square[0], rank + square[1])) {
                 return;
             }
-            if (piece.flip === 1 && this.piece_at(file + square[0], rank + square[1]) <= 0) {
+            if (piece.flip === 1 && this.piece_at(file + square[0], rank + square[1]) <= 0 && !this.check_piece_at(file + square[0], rank + square[1], piece.flip)) {
                 possible_moves.push([file + square[0], rank + square[1]]);
             }
-            else if (piece.flip === -1 && this.piece_at(file + square[0], rank + square[1]) >= 0) {
+            else if (piece.flip === -1 && this.piece_at(file + square[0], rank + square[1]) >= 0 && !this.check_piece_at(file + square[0], rank + square[1], piece.flip)) {
                 possible_moves.push([file + square[0], rank + square[1]]);
             }
         })
@@ -814,12 +832,18 @@ export class Chess extends Scene {
     get_piece(file, rank) {
         let p;
         this.white_pieces.forEach((piece) => {
-           if (piece.file === file && piece.rank === rank) {
-               p = piece;
-           }
+            if (piece.state.mode === EATEN) {
+                return;
+            }
+            if (piece.file === file && piece.rank === rank) {
+                p = piece;
+            }
         });
 
         this.black_pieces.forEach((piece) => {
+            if (piece.state.mode === EATEN) {
+                return;
+            }
             if (piece.file === file && piece.rank === rank) {
                 p = piece;
             }
@@ -866,7 +890,7 @@ export class Chess extends Scene {
         }
 
         let p = this.get_piece(file, rank);
-
+        console.log(p);
         // tell piece to start moving
 
         p.move_to(file2, rank2, t);
