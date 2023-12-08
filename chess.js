@@ -18,7 +18,7 @@ const BISHOP = 3;
 const ROOK = 4;
 const QUEEN = 5;
 const KING = 6;
-const COOLDOWN = 3;
+const COOLDOWN = 10;
 
 class Piece {
     constructor(shape, file, rank, piece_color, translation = 0, scale = 1, piece = PAWN) {
@@ -1049,7 +1049,8 @@ export class Chess extends Scene {
                 
                 const kill = (piece) =>{
                     piece.kill();
-                    if(piece.is_king === true){
+                    if(Math.abs(piece.piece) === KING){
+                        alert(piece.flip < 0 ? 'White won' : 'Black won');
                         this.reset_board();
                     }
 
