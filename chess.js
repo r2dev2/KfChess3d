@@ -18,6 +18,7 @@ const BISHOP = 3;
 const ROOK = 4;
 const QUEEN = 5;
 const KING = 6;
+const COOLDOWN = 3;
 
 class Piece {
     constructor(shape, file, rank, piece_color, translation = 0, scale = 1, piece = PAWN) {
@@ -40,6 +41,7 @@ class Piece {
             v: [0, 0, 0],
             a: 0,
             start_t: 0,
+            cooldown_left: 0
         }
 
         this.model_transform = Mat4.identity();
@@ -101,6 +103,7 @@ class Piece {
             // reset velocity and acceleration
             this.state.v = [0, 0, 0];
             this.state.a = 0;
+            this.state.cooldown_left = COOLDOWN;
             return this.model_transform;
         }
 
@@ -116,6 +119,20 @@ class Piece {
     kill() {
         this.state.mode = EATEN;
     }
+
+    getCooldown() {
+        console.log(this.state.cooldown_left)
+        return this.state.cooldown_left / COOLDOWN;
+    }
+
+    updateCooldown(dt) {
+        if (this.state.cooldown_left <= 0) {
+            this.state.cooldown_left = 0;
+            return;
+        }
+        this.state.cooldown_left -= dt;
+    }
+
 }
 
 
@@ -297,7 +314,8 @@ export class Chess extends Scene {
                 if (this.selected_square === "") {
                     const piece = this.piece_at(str.charCodeAt(5) - 'a'.charCodeAt(0), (str.charCodeAt(6) - '0'.charCodeAt(0)) - 1);
                     // if (isWhite && piece > 0 || !isWhite && piece < 0) {
-                    if (piece !== 0) {
+                    const piece_obj = this.get_piece(str.charCodeAt(5) - 'a'.charCodeAt(0), (str.charCodeAt(6) - '0'.charCodeAt(0)) - 1)
+                    if (piece !== 0 && piece_obj.state.cooldown_left <= 0) {
                         this.selected_square = str;
                     }
                 }
@@ -816,7 +834,7 @@ export class Chess extends Scene {
         let [file2, rank2] = [end_file.charCodeAt(0) - 'a'.charCodeAt(0), end_rank - 1];
 
         if (!this.piece_at(file, rank)) {
-            return false;
+            return false; 
         }
 
         let possible = false;
@@ -953,6 +971,7 @@ export class Chess extends Scene {
             selected_file = this.selected_square.charCodeAt(5) - 'a'.charCodeAt(0);
             selected_rank = this.selected_square.charCodeAt(6) - '0'.charCodeAt(0) - 1;
         }
+        
         this.white_pieces.forEach((piece, i) => {
             // console.log(piece.model_transform);
             if (piece.state.mode === EATEN) {
@@ -961,11 +980,11 @@ export class Chess extends Scene {
 
             if (selected_file === piece.file && selected_rank === piece.rank) {
                 piece.shape.draw(context, program_state, piece.compute_transform(t).times(Mat4.rotation(t, 0, 1, 0)),
-                    this.materials.piece);
+                    this.materials.piece.override({ cooldown: piece.getCooldown() }));
             }
             else {
                 piece.shape.draw(context, program_state, piece.compute_transform(t),
-                    this.materials.piece);
+                    this.materials.piece.override({ cooldown: piece.getCooldown() }));
             }
         });
 
@@ -976,11 +995,11 @@ export class Chess extends Scene {
 
             if (selected_file === piece.file && selected_rank === piece.rank) {
                 piece.shape.draw(context, program_state, piece.compute_transform(t).times(Mat4.rotation(t, 0, 1, 0)),
-                    this.materials.piece.override({ color: hex_color("#000000") }));
+                    this.materials.piece.override({ color: hex_color("#000000"), cooldown: piece.getCooldown() }));
             }
             else {
                 piece.shape.draw(context, program_state, piece.compute_transform(t),
-                    this.materials.piece.override({ color: hex_color("#000000") }));
+                    this.materials.piece.override({ color: hex_color("#000000"), cooldown: piece.getCooldown() }));
             }
         });
 
@@ -1049,6 +1068,8 @@ export class Chess extends Scene {
         this.shapes.walls.draw(context, program_state, model_transform.times(Mat4.translation(1, 1, 500)).times(Mat4.scale(500, 500, 1)), this.materials.front);
         this.shapes.walls.draw(context, program_state, model_transform.times(Mat4.translation(1, 1, -500)).times(Mat4.scale(500, 500, 1)), this.materials.back);
         
+        this.white_pieces.forEach((piece) => piece.updateCooldown(dt));
+        this.black_pieces.forEach((piece) => piece.updateCooldown(dt));
     }
 }
 
