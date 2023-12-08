@@ -18,7 +18,7 @@ const BISHOP = 3;
 const ROOK = 4;
 const QUEEN = 5;
 const KING = 6;
-const COOLDOWN = 10;
+const COOLDOWN = 5;
 
 class Piece {
     constructor(shape, file, rank, piece_color, translation = 0, scale = 1, piece = PAWN) {

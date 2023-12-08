@@ -20,7 +20,7 @@ export class Cooldown_Shader extends defs.Textured_Phong {
               if (vertex_worldspace.y > cooldown_level) mixin *= 0.;
                                                                        // Compute an initial (ambient) color:
             
-              gl_FragColor = vec4( ( tex_color.xyz + shape_color.xyz + mixin ) * ambient, shape_color.w * tex_color.w ); 
+              gl_FragColor = vec4( ( tex_color.xyz + shape_color.xyz + mixin ) * ambient * .666666, shape_color.w * tex_color.w );
                                                                        // Compute the final color with contributions from lights:
               gl_FragColor.xyz += phong_model_lights( normalize( N ), vertex_worldspace );
             } `;
