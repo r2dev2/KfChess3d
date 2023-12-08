@@ -312,9 +312,8 @@ export class Chess extends Scene {
                 let str = objMap.get(obj).toString();
                 if (this.selected_square === "") {
                     const piece = this.piece_at(str.charCodeAt(5) - 'a'.charCodeAt(0), (str.charCodeAt(6) - '0'.charCodeAt(0)) - 1);
-                    // if (isWhite && piece > 0 || !isWhite && piece < 0) {
                     const piece_obj = this.get_piece(str.charCodeAt(5) - 'a'.charCodeAt(0), (str.charCodeAt(6) - '0'.charCodeAt(0)) - 1)
-                    if (piece !== 0 && piece_obj.state.cooldown_left <= 0) {
+                    if ((isWhite && piece > 0 || !isWhite && piece < 0) && piece_obj.state.cooldown_left <= 0) {
                         this.selected_square = str;
                     }
                 }
