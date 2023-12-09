@@ -605,7 +605,7 @@ export class Chess extends Scene {
 
             }
 
-            if (this.piece_at(file + d, rank + d) !== 0 && !this.check_piece_at(file + d, rank + d, piece.flip)) {
+            if (this.piece_at(file + d, rank + d) !== 0 || this.check_piece_at(file + d, rank + d, piece.flip)) {
                 break;
             }
         }
@@ -625,7 +625,7 @@ export class Chess extends Scene {
 
             }
 
-            if (this.piece_at(file + d, rank + d) !== 0 && !this.check_piece_at(file + d, rank + d, piece.flip)) {
+            if (this.piece_at(file + d, rank + d) !== 0 || this.check_piece_at(file + d, rank + d, piece.flip)) {
                 break;
             }
         }
@@ -645,7 +645,7 @@ export class Chess extends Scene {
 
             }
 
-            if (this.piece_at(file + d, rank - d) !== 0 && !this.check_piece_at(file + d, rank - d, piece.flip)) {
+            if (this.piece_at(file + d, rank - d) !== 0 || this.check_piece_at(file + d, rank - d, piece.flip)) {
                 break;
             }
 
@@ -666,7 +666,7 @@ export class Chess extends Scene {
 
             }
 
-            if (this.piece_at(file + d, rank - d) !== 0 && !this.check_piece_at(file + d, rank - d, piece.flip)) {
+            if (this.piece_at(file + d, rank - d) !== 0 || this.check_piece_at(file + d, rank - d, piece.flip)) {
                 break;
             }
 
@@ -707,7 +707,7 @@ export class Chess extends Scene {
 
             }
 
-            if (this.piece_at(file + d, rank) !== 0 && !this.check_piece_at(file + d, rank, piece.flip)) {
+            if (this.piece_at(file + d, rank) !== 0 || this.check_piece_at(file + d, rank, piece.flip)) {
                 break;
             }
         }
@@ -727,7 +727,7 @@ export class Chess extends Scene {
 
             }
 
-            if (this.piece_at(file + d, rank) !== 0 && !this.check_piece_at(file + d, rank, piece.flip)) {
+            if (this.piece_at(file + d, rank) !== 0 || this.check_piece_at(file + d, rank, piece.flip)) {
                 break;
             }
         }
@@ -747,7 +747,7 @@ export class Chess extends Scene {
 
             }
 
-            if (this.piece_at(file, rank + d) !== 0 && !this.check_piece_at(file, rank + d, piece.flip)) {
+            if (this.piece_at(file, rank + d) !== 0 || this.check_piece_at(file, rank + d, piece.flip)) {
                 break;
             }
 
@@ -768,7 +768,7 @@ export class Chess extends Scene {
 
             }
 
-            if (this.piece_at(file, rank + d) !== 0 && !this.check_piece_at(file, rank + d, piece.flip)) {
+            if (this.piece_at(file, rank + d) !== 0 || this.check_piece_at(file, rank + d, piece.flip)) {
                 break;
             }
 
